@@ -17,7 +17,7 @@ Raspberry Pi W Zero. Help is needed to improve the reliability of the package.
 
 The following peripherals are currently supported:
 
-* GPIO.
+* GPIO (without PWM).
 * SPI.
 
 ## Requirements
