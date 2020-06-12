@@ -76,14 +76,14 @@ function init_spi(devices::AbstractVector{String};
             # Configure SPI interface
             # ==================================================================
 
-            _ioctl(io, SPI_IOC_WR_MODE, mode[i])
-            _ioctl(io, SPI_IOC_RD_MODE, mode[i])
+            _ioctl(io, SPI_IOC_WR_MODE, Ref(mode[i]))
+            _ioctl(io, SPI_IOC_RD_MODE, Ref(mode[i]))
 
-            _ioctl(io, SPI_IOC_WR_BITS_PER_WORD, bits_per_word[i])
-            _ioctl(io, SPI_IOC_RD_BITS_PER_WORD, bits_per_word[i])
+            _ioctl(io, SPI_IOC_WR_BITS_PER_WORD, Ref(bits_per_word[i]))
+            _ioctl(io, SPI_IOC_RD_BITS_PER_WORD, Ref(bits_per_word[i]))
 
-            _ioctl(io, SPI_IOC_WR_MAX_SPEED_HZ, max_speed_hz[i])
-            _ioctl(io, SPI_IOC_RD_MAX_SPEED_HZ, max_speed_hz[i])
+            _ioctl(io, SPI_IOC_WR_MAX_SPEED_HZ, Ref(max_speed_hz[i]))
+            _ioctl(io, SPI_IOC_RD_MAX_SPEED_HZ, Ref(max_speed_hz[i]))
 
             # Pack values
             # ==================================================================
