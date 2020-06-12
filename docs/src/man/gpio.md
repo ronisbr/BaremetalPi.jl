@@ -136,8 +136,4 @@ julia> gpio_set(0xAAAAAAAA) # .... Sets the even GPIOs and clears the odd GPIOs.
 
 !!! note
 
-    The first bit the `v` is related to the GPIO #1 instead of the GPIO #0.
-
-!!! note
-
     The bits higher than 27, which are the number of GPIOs, are just ignored.

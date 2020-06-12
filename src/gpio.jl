@@ -49,7 +49,7 @@ Return the state of the GPIO `gpio`.
 """
 function gpio_get_mode(gpio::Int)
     @assert objects.gpio_init "GPIO not initialized. Run init_gpio()."
-    @assert (1 ≤ gpio ≤ 27) "GPIO out of range."
+    @assert (0 ≤ gpio ≤ 27) "GPIO out of range."
 
     map = objects.gpiomem_map
 
@@ -87,7 +87,7 @@ Set the mode of the GPIO `gpio` to `mode`. `gpio` can be an integer of an
 """
 function gpio_set_mode(gpio::Int, mode::Symbol)
     @assert objects.gpio_init "GPIO not initialized. Run init_gpio()."
-    @assert (1 ≤ gpio ≤ 27) "GPIO out of range."
+    @assert (0 ≤ gpio ≤ 27) "GPIO out of range."
     @assert haskey(GPIO_MODE_SET, mode) "Unknown GPIO mode."
 
     map = objects.gpiomem_map
@@ -129,7 +129,7 @@ Read the GPIO `gpio`. The returned value is boolean.
 """
 function gpio_read(gpio::Int)
     @assert objects.gpio_init "GPIO not initialized. Run init_gpio()."
-    @assert (1 ≤ gpio ≤ 27) "GPIO out of range."
+    @assert (0 ≤ gpio ≤ 27) "GPIO out of range."
 
     @inbounds begin
         if (objects.gpiomem_map[13+1] & (1 << gpio)) > 0
@@ -152,7 +152,7 @@ Clear GPIO `gpio`.
 """
 @inline function gpio_clear(gpio::Int)
     @assert objects.gpio_init "GPIO not initialized. Run init_gpio()."
-    @assert (1 ≤ gpio ≤ 27) "GPIO out of range."
+    @assert (0 ≤ gpio ≤ 27) "GPIO out of range."
 
     @inbounds begin
         objects.gpiomem_map[10+1] = 1 << gpio
@@ -177,7 +177,7 @@ Set GPIO `gpio`.
 """
 @inline function gpio_set(gpio::Int)
     @assert objects.gpio_init "GPIO not initialized. Run init_gpio()."
-    @assert (1 ≤ gpio ≤ 27) "GPIO out of range."
+    @assert (0 ≤ gpio ≤ 27) "GPIO out of range."
 
     @inbounds begin
         objects.gpiomem_map[7+1] = 1 << gpio
@@ -210,14 +210,11 @@ function gpio_value(v::Integer)
     @assert (v ≥ 0) "`v` cannot be negative."
 
     @inbounds begin
-        # We must skip the first bit.
-        v = v << 1
-
         # Set the GPIO.
-        objects.gpiomem_map[7+1]  = v & 0xFFFFFFE
+        objects.gpiomem_map[7+1]  = v & 0xFFFFFFF
 
         # Clear the GPIOs.
-        objects.gpiomem_map[10+1] = (~UInt32(v)) & 0xFFFFFFE
+        objects.gpiomem_map[10+1] = (~UInt32(v)) & 0xFFFFFFF
     end
 
     return nothing
