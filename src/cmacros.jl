@@ -43,12 +43,87 @@ _IOW(type,nr,size) = _IOC(_IOC_WRITE, type, nr, _IOC_TYPECHECK(size))
 _IOR(type,nr,size) = _IOC(_IOC_READ,  type, nr, _IOC_TYPECHECK(size))
 
 ################################################################################
+#                                     I2C
+################################################################################
+
+# Constants and macros obtained from `linux/include/uapi/linux/i2c-dev.h` tag
+# v4.19.
+
+const I2C_SLAVE       = 0x0703
+const I2C_SLAVE_FORCE = 0x0706
+const I2C_TENBIT      = 0x0704
+const I2C_FUNCS       = 0x0705
+const I2C_RDWR        = 0x0707
+const I2C_PEC         = 0x0708
+const I2C_SMBUS       = 0x0720
+
+# Functionality
+# ==============================================================================
+
+# Constants and macros obtained from `linux/include/uapi/linux/i2c.h` tag v4.19.
+
+const I2C_FUNC_I2C                    = 0x00000001
+const I2C_FUNC_10BIT_ADDR             = 0x00000002
+const I2C_FUNC_PROTOCOL_MANGLING      = 0x00000004
+const I2C_FUNC_SMBUS_PEC              = 0x00000008
+const I2C_FUNC_NOSTART                = 0x00000010
+const I2C_FUNC_SLAVE                  = 0x00000020
+const I2C_FUNC_SMBUS_BLOCK_PROC_CALL  = 0x00008000
+const I2C_FUNC_SMBUS_QUICK            = 0x00010000
+const I2C_FUNC_SMBUS_READ_BYTE        = 0x00020000
+const I2C_FUNC_SMBUS_WRITE_BYTE       = 0x00040000
+const I2C_FUNC_SMBUS_READ_BYTE_DATA   = 0x00080000
+const I2C_FUNC_SMBUS_WRITE_BYTE_DATA  = 0x00100000
+const I2C_FUNC_SMBUS_READ_WORD_DATA   = 0x00200000
+const I2C_FUNC_SMBUS_WRITE_WORD_DATA  = 0x00400000
+const I2C_FUNC_SMBUS_PROC_CALL        = 0x00800000
+const I2C_FUNC_SMBUS_READ_BLOCK_DATA  = 0x01000000
+const I2C_FUNC_SMBUS_WRITE_BLOCK_DATA = 0x02000000
+const I2C_FUNC_SMBUS_READ_I2C_BLOCK   = 0x04000000
+const I2C_FUNC_SMBUS_WRITE_I2C_BLOCK  = 0x08000000
+const I2C_FUNC_SMBUS_HOST_NOTIFY      = 0x10000000
+
+const  I2C_FUNC_SMBUS_BYTE       = (I2C_FUNC_SMBUS_READ_BYTE |
+                                    I2C_FUNC_SMBUS_WRITE_BYTE)
+const  I2C_FUNC_SMBUS_BYTE_DATA  = (I2C_FUNC_SMBUS_READ_BYTE_DATA |
+                                    I2C_FUNC_SMBUS_WRITE_BYTE_DATA)
+const  I2C_FUNC_SMBUS_WORD_DATA  = (I2C_FUNC_SMBUS_READ_WORD_DATA |
+                                    I2C_FUNC_SMBUS_WRITE_WORD_DATA)
+const  I2C_FUNC_SMBUS_BLOCK_DATA = (I2C_FUNC_SMBUS_READ_BLOCK_DATA |
+                                    I2C_FUNC_SMBUS_WRITE_BLOCK_DATA)
+const  I2C_FUNC_SMBUS_I2C_BLOCK  = (I2C_FUNC_SMBUS_READ_I2C_BLOCK |
+                                    I2C_FUNC_SMBUS_WRITE_I2C_BLOCK)
+
+const I2C_FUNC_SMBUS_EMUL = (I2C_FUNC_SMBUS_QUICK |
+                             I2C_FUNC_SMBUS_BYTE |
+                             I2C_FUNC_SMBUS_BYTE_DATA |
+                             I2C_FUNC_SMBUS_WORD_DATA |
+                             I2C_FUNC_SMBUS_PROC_CALL |
+                             I2C_FUNC_SMBUS_WRITE_BLOCK_DATA |
+                             I2C_FUNC_SMBUS_I2C_BLOCK |
+                             I2C_FUNC_SMBUS_PEC)
+
+const I2C_SMBUS_BLOCK_MAX        = UInt8(32)
+
+const I2C_SMBUS_READ             = 0x01
+const I2C_SMBUS_WRITE            = 0x00
+
+const I2C_SMBUS_QUICK            = UInt32(0)
+const I2C_SMBUS_BYTE             = UInt32(1)
+const I2C_SMBUS_BYTE_DATA        = UInt32(2)
+const I2C_SMBUS_WORD_DATA        = UInt32(3)
+const I2C_SMBUS_PROC_CALL        = UInt32(4)
+const I2C_SMBUS_BLOCK_DATA       = UInt32(5)
+const I2C_SMBUS_I2C_BLOCK_BROKEN = UInt32(6)
+const I2C_SMBUS_BLOCK_PROC_CALL  = UInt32(7)
+const I2C_SMBUS_I2C_BLOCK_DATA   = UInt32(8)
+
+################################################################################
 #                                     SPI
 ################################################################################
 
-# Constants and macros obtained from `linux/include/linux/spi/spidev.h` tag
+# Constants and macros obtained from `linux/include/uapi/linux/spi/spidev.h` tag
 # v4.19.
-
 const SPI_CPHA      = 0x01
 const SPI_CPOL      = 0x02
 

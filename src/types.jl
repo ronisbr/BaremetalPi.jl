@@ -8,6 +8,25 @@
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 
 ################################################################################
+#                                     I2C
+################################################################################
+
+mutable struct I2CDEV
+    io::IOStream
+    funcs::Vector{Symbol}
+end
+
+struct struct_i2c_smbus_ioctl_data{T}
+    read_write::__u8
+    command::__u8
+    size::__u32
+    data::T
+
+    struct_i2c_smbus_ioctl_data(read_write, command, size, data::T) where T=
+        new{T}(__u8(read_write), __u8(command), __u32(size), data)
+end
+
+################################################################################
 #                                     SPI
 ################################################################################
 
@@ -57,6 +76,11 @@ mutable struct Objects
     gpiomem_io::IOStream
     gpiomem_map::Vector{UInt32}
 
+    # I2C
+    # ==========================================================================
+    i2c_init::Bool
+    i2cdev::Vector{I2CDEV}
+
     # SPI
     # ==========================================================================
     spi_init::Bool
@@ -65,4 +89,5 @@ mutable struct Objects
 end
 
 const objects = Objects(false, IOStream(""), Vector{UInt32}(undef,0),
+                        false, Vector{I2CDEV}(undef, 0),
                         false, Vector{SPIDEV}(undef, 0), 4096)
