@@ -93,7 +93,7 @@ var documenterSearchIndex = {"docs": [
     "page": "GPIO",
     "title": "GPIO functions",
     "category": "section",
-    "text": "The following functions can be used to set a GPIO, i.e., change it to the logic level 1.gpio_set(gpio::Int)\ngpio_set(gpio::AbstractVector{Int})The former set the GPIO gpio, whereas the later set all GPIOs in the vector gpio.julia> gpio_set(5)\n\njulia> gpio_set(1:10)\nnote: Note\nNo check is performed to verify which is the current mode of the GPIO. The user must take care to set those GPIOs mode to :out.The input from a GPIO can be read by the function gpio_read, which has the following signature:gpio_read(gpio::Int)It returns true if the GPIO gpio is in high logic level, or false otherwise.julia> gpio_read(5)\ntrue\n\njulia> gpio_read(5)\nfalse\nIt is also possible to use the function gpio_value to set all the GPIOs to a specific value:gpio_value(v::Integer)where the bits that are 0 will be cleared, and the bits that are 1 will be set. Another possibility is to pass to gpio_value a BitVector, which will perform the same operation considering the values on the vector.gpio_value(v::BitVector)julia> gpio_value(0)        # ................................ Clears all GPIOs.\n\njulia> gpio_set(0xFFFFFFFF) # .................................. Sets all GPIOs.\n\njulia> gpio_set(0xAAAAAAAA) # .... Sets the even GPIOs and clears the odd GPIOs.note: Note\nThe first bit the v is related to the GPIO #1 instead of the GPIO #0.note: Note\nThe bits higher than 27, which are the number of GPIOs, are just ignored."
+    "text": "The following functions can be used to set a GPIO, i.e., change it to the logic level 1.gpio_set(gpio::Int)\ngpio_set(gpio::AbstractVector{Int})The former set the GPIO gpio, whereas the later set all GPIOs in the vector gpio.julia> gpio_set(5)\n\njulia> gpio_set(1:10)\nnote: Note\nNo check is performed to verify which is the current mode of the GPIO. The user must take care to set those GPIOs mode to :out.The input from a GPIO can be read by the function gpio_read, which has the following signature:gpio_read(gpio::Int)It returns true if the GPIO gpio is in high logic level, or false otherwise.julia> gpio_read(5)\ntrue\n\njulia> gpio_read(5)\nfalse\nIt is also possible to use the function gpio_value to set all the GPIOs to a specific value:gpio_value(v::Integer)where the bits that are 0 will be cleared, and the bits that are 1 will be set. Another possibility is to pass to gpio_value a BitVector, which will perform the same operation considering the values on the vector.gpio_value(v::BitVector)julia> gpio_value(0)        # ................................ Clears all GPIOs.\n\njulia> gpio_set(0xFFFFFFFF) # .................................. Sets all GPIOs.\n\njulia> gpio_set(0xAAAAAAAA) # .... Sets the even GPIOs and clears the odd GPIOs.note: Note\nThe bits higher than 27, which are the number of GPIOs, are just ignored."
 },
 
 {
@@ -145,6 +145,14 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
+    "location": "lib/library/#BaremetalPi.close_i2c-Tuple{}",
+    "page": "Library",
+    "title": "BaremetalPi.close_i2c",
+    "category": "method",
+    "text": "close_i2c()\n\nClose all I2C connections.\n\n\n\n\n\n"
+},
+
+{
     "location": "lib/library/#BaremetalPi.gpio_clear-Tuple{Int64}",
     "page": "Library",
     "title": "BaremetalPi.gpio_clear",
@@ -193,11 +201,107 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
+    "location": "lib/library/#BaremetalPi.i2c_get_funcs-Tuple{Int64}",
+    "page": "Library",
+    "title": "BaremetalPi.i2c_get_funcs",
+    "category": "method",
+    "text": "i2c_get_funcs(devid::Int)\n\nReturn a vector with the available I2C functions in the device devid.\n\ndevid is the ID of the I2C device considering the initialization order when the function init_i2c was called.\n\n\n\n\n\n"
+},
+
+{
+    "location": "lib/library/#BaremetalPi.i2c_slave-Tuple{Integer,Integer}",
+    "page": "Library",
+    "title": "BaremetalPi.i2c_slave",
+    "category": "method",
+    "text": "i2c_slave(devid::Integer, address::Integer)\n\nSelect the slave device in address address using I2C device devid.\n\ndevid is the ID of the I2C device considering the initialization order when the function init_i2c was called.\n\n\n\n\n\n"
+},
+
+{
+    "location": "lib/library/#BaremetalPi.i2c_slave_force-Tuple{Integer,Integer}",
+    "page": "Library",
+    "title": "BaremetalPi.i2c_slave_force",
+    "category": "method",
+    "text": "i2c_slave_force(devid::Integer, address::Integer)\n\nForce selection of slave device in address address using I2C device devid.\n\ndevid is the ID of the I2C device considering the initialization order when the function init_i2c was called.\n\n\n\n\n\n"
+},
+
+{
+    "location": "lib/library/#BaremetalPi.i2c_smbus_read_byte-Tuple{Integer}",
+    "page": "Library",
+    "title": "BaremetalPi.i2c_smbus_read_byte",
+    "category": "method",
+    "text": "i2c_smbus_read_byte(devid::Integer)\n\nPerform a SMBUS read byte using the I2C device devid. This functions returns the read byte.\n\ndevid is the ID of the I2C device considering the initialization order when the function init_i2c was called.\n\n\n\n\n\n"
+},
+
+{
+    "location": "lib/library/#BaremetalPi.i2c_smbus_read_byte_data-Tuple{Integer,Integer}",
+    "page": "Library",
+    "title": "BaremetalPi.i2c_smbus_read_byte_data",
+    "category": "method",
+    "text": "i2c_smbus_read_byte_data(devid::Integer, command::Integer)\n\nPerform a SMBUS read byte with command command using the I2C device devid. This function return the read byte.\n\ndevid is the ID of the I2C device considering the initialization order when the function init_i2c was called.\n\n\n\n\n\n"
+},
+
+{
+    "location": "lib/library/#BaremetalPi.i2c_smbus_read_i2c_block_data-Tuple{Integer,Integer,Integer}",
+    "page": "Library",
+    "title": "BaremetalPi.i2c_smbus_read_i2c_block_data",
+    "category": "method",
+    "text": "i2c_smbus_read_i2c_block_data(devid::Integer, command::Integer, size::Integer)\n\nPerform a SMBUS read block with command command and length length using the I2C device devid. The read data will be returned in an array of UInt8 with size size.\n\ndevid is the ID of the I2C device considering the initialization order when the function init_i2c was called.\n\n\n\n\n\n"
+},
+
+{
+    "location": "lib/library/#BaremetalPi.i2c_smbus_read_word_data-Tuple{Integer,Integer}",
+    "page": "Library",
+    "title": "BaremetalPi.i2c_smbus_read_word_data",
+    "category": "method",
+    "text": "i2c_smbus_read_word_data(devid::Integer, command::Integer)\n\nPerform a SMBUS read word with command command using the I2C device devid. This function return the read word.\n\ndevid is the ID of the I2C device considering the initialization order when the function init_i2c was called.\n\n\n\n\n\n"
+},
+
+{
+    "location": "lib/library/#BaremetalPi.i2c_smbus_write_byte-Tuple{Integer,Integer}",
+    "page": "Library",
+    "title": "BaremetalPi.i2c_smbus_write_byte",
+    "category": "method",
+    "text": "i2c_smbus_write_byte(devid::Integer, value::Integer)\n\nPerform a SMBUS write byte with value value using the I2C device devid.\n\ndevid is the ID of the I2C device considering the initialization order when the function init_i2c was called.\n\n\n\n\n\n"
+},
+
+{
+    "location": "lib/library/#BaremetalPi.i2c_smbus_write_byte_data-Tuple{Integer,Integer,Integer}",
+    "page": "Library",
+    "title": "BaremetalPi.i2c_smbus_write_byte_data",
+    "category": "method",
+    "text": "i2c_smbus_write_byte_data(devid::Integer, command::Integer, value::Integer)\n\nPerform a SMBUS write byte with command command and value value using the I2C device devid.\n\ndevid is the ID of the I2C device considering the initialization order when the function init_i2c was called.\n\n\n\n\n\n"
+},
+
+{
+    "location": "lib/library/#BaremetalPi.i2c_smbus_write_i2c_block_data-Tuple{Integer,Integer,Array{UInt8,1}}",
+    "page": "Library",
+    "title": "BaremetalPi.i2c_smbus_write_i2c_block_data",
+    "category": "method",
+    "text": "i2c_smbus_write_i2c_block_data(devid::Integer, command::Integer, values::Vector{UInt8})\n\nPerform a SMBUS write I2C block data with command command and data in values using the I2C device devid.\n\ndevid is the ID of the I2C device considering the initialization order when the function init_i2c was called.\n\n\n\n\n\n"
+},
+
+{
+    "location": "lib/library/#BaremetalPi.i2c_smbus_write_word_data-Tuple{Integer,Integer,Integer}",
+    "page": "Library",
+    "title": "BaremetalPi.i2c_smbus_write_word_data",
+    "category": "method",
+    "text": "i2c_smbus_write_word_data(devid::Integer, command::Integer, value::Integer)\n\nPerform a SMBUS write word with command command and value value using the I2C device devid.\n\ndevid is the ID of the I2C device considering the initialization order when the function init_i2c was called.\n\n\n\n\n\n"
+},
+
+{
     "location": "lib/library/#BaremetalPi.init_gpio-Tuple{}",
     "page": "Library",
     "title": "BaremetalPi.init_gpio",
     "category": "method",
     "text": "init_gpio()\n\nInitialize the GPIO.\n\n\n\n\n\n"
+},
+
+{
+    "location": "lib/library/#BaremetalPi.init_i2c-Tuple{String}",
+    "page": "Library",
+    "title": "BaremetalPi.init_i2c",
+    "category": "method",
+    "text": "init_i2c(devices)\n\nInitialize the I2C devices. devices can be a string with the path to i2cdev or a vector of strings with a set of I2C devices that will be initialized.\n\n\n\n\n\n"
 },
 
 {
