@@ -29,7 +29,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Home",
     "title": "Supported peripherals",
     "category": "section",
-    "text": "The following peripherals are currently supported:GPIO.\nSPI."
+    "text": "The following peripherals are currently supported:GPIO (without PWM).\nSPI.\nI2C (SMBUS)."
 },
 
 {
