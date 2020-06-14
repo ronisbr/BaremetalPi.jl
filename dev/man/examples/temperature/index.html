@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Temperature · BaremetalPi</title><link rel="canonical" href="https://ronisbr.github.io/BaremetalPi.jl/stable/man/examples/temperature/index.html"/><link href="https://cdnjs.cloudflare.com/ajax/libs/normalize/4.2.0/normalize.min.css" rel="stylesheet" type="text/css"/><link href="https://fonts.googleapis.com/css?family=Lato|Roboto+Mono" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.6.3/css/font-awesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/default.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL="../../.."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.2.0/require.min.js" data-main="../../../assets/documenter.js"></script><script src="../../../siteinfo.js"></script><script src="../../../../versions.js"></script><link href="../../../assets/documenter.css" rel="stylesheet" type="text/css"/></head><body><nav class="toc"><h1>BaremetalPi</h1><select id="version-selector" onChange="window.location.href=this.value" style="visibility: hidden"></select><form class="search" id="search-form" action="../../../search/"><input id="search-query" name="q" type="text" placeholder="Search docs"/></form><ul><li><a class="toctext" href="../../../">Home</a></li><li><a class="toctext" href="../../gpio/">GPIO</a></li><li><a class="toctext" href="../../spi/">SPI</a></li><li><span class="toctext">Examples</span><ul><li><a class="toctext" href="../led/">LED</a></li><li class="current"><a class="toctext" href>Temperature</a><ul class="internal"></ul></li></ul></li><li><a class="toctext" href="../../../lib/library/">Library</a></li></ul></nav><article id="docs"><header><nav><ul><li>Examples</li><li><a href>Temperature</a></li></ul><a class="edit-page" href="https://github.com/ronisbr/BaremetalPi.jl/blob/master/docs/src/man/examples/temperature.md"><span class="fa"></span> Edit on GitHub</a></nav><hr/><div id="topbar"><span>Temperature</span><a class="fa fa-bars" href="#"></a></div></header><h1><a class="nav-anchor" id="Temperature-1" href="#Temperature-1">Temperature</a></h1><p>This example shows how to use <strong>BaremetalPi.jl</strong> together with a AD converter MCP3008 and a 103 thermistor to read the ambient temperature. The connections between the components are shown in the following figure:</p><div class="admonition warning"><div class="admonition-title">Warning</div><div class="admonition-text"><p>We are using the Raspberry Pi Zero W as an example. You <strong>must</strong> modify it according to your model.</p></div></div><img src="../../../assets/Schematic_example_temperature.png" width="85%"/><p>The MCP3008 is a 8-channel 10-bit analog to digital converted that communicates using the SPI interface. Thus, the first thing is to make sure that SPI is enabled in your Linux distribution so that the devices <code>/dev/spidevX.Y</code> exists (<code>X</code> and <code>Y</code> are integers related to the SPI numbering). Please, check the manual of your distribution for more information.</p><p>After the connection, we need to start the SPI interface in <strong>BaremetalPi.jl</strong>. Here, we consider that the device in which the MCP3008 was connected is called <code>/dev/spidev0.0</code>.</p><pre><code class="language-julia">using BaremetalPi
+
+init_spi(&quot;/dev/spidev0.0&quot;, max_speed_hz = 1000)</code></pre><p>Notice that we limit the sampling speed to 1000 Hz to improve the signal-to-noise ratio of the AD conversion as per MCP3008 datasheet.</p><p>To acquire a new measurement, we need to perform a full-duplex SPI transfer. Three bytes must be sent to the device: <code>0x01 0x80 0x00</code>, which asks for a new measurement of the channel 0. For more information about how MCP3008 works, please, see the datasheet. This full-duplex transfer can be accomplished using <strong>BaremetalPi.jl</strong> as follows:</p><pre><code class="language-julia">tx_buf = [0x01, 0x80, 0x00]
+rx_buf = zeros(UInt8, 3)
+
+ret = spi_transfer!(1, tx_buf, rx_buf)</code></pre><p><code>ret</code> must be 3 indicating that the device returned 3 bytes. The 10-bit AD measurement is then stored in <code>rx_buf[2:3]</code>. The conversion to voltage is performed as follows:</p><pre><code class="language-julia">V = ( (UInt16(rx_buf[2] &amp; 3) &lt;&lt; 8) + rx_buf[3] )*3.3/1024</code></pre><p>Now, we need to obtain the resistance of the thermistor using the equation of the voltage divider:</p><pre><code class="language-julia">R_div = 10_000         # ............. Resistor value at the voltage divider [Ω]
+th_R = R_div*(3.3/V - 1)</code></pre><p>Finally, using the relationship between resistance and temperature for the selected thermistor, we can get a measurement of the ambient temperature:</p><pre><code class="language-julia">th_β  = 3380           # ................ Beta coefficient of the thermistor [K]
+th_R₀ = 10_000         # ............. Reference thermistor resistance at T₀ [Ω]
+th_T₀ = 25             # ....... Reference temperature T₀ of the thermistor [°C]
+
+T = 1/( log(th_R / th_R₀)/th_β + 1/(th_T₀ + 273.15) ) - 273.15</code></pre><p>The following code prints the temperature every 5s:</p><pre><code class="language-julia">using Dates
+using Printf
+using BaremetalPi
+
+################################################################################
+#                                Configuration
+################################################################################
+
+const R_div = 10_000   # ............. Resistor value at the voltage divider [Ω]
+const th_β  = 3380     # ................ Beta coefficient of the thermistor [K]
+const th_R₀ = 10_000   # ............. Reference thermistor resistance at T₀ [Ω]
+const th_T₀ = 25       # ....... Reference temperature T₀ of the thermistor [°C]
+
+################################################################################
+#                                  Functions
+################################################################################
+
+function acquire_temperature()
+    # Acquire the AD measurement
+    # ==========================================================================
+
+    tx_buf = [0x01, 0x80, 0x00]
+    rx_buf = zeros(UInt8, 3)
+    V      = 0
+
+    ret = spi_transfer!(1, tx_buf, rx_buf)
+
+    if ret != 3
+        @warn(&quot;The data received from MCP3008 does not have 3 bytes.&quot;)
+        return NaN
+    end
+
+    # AD measurement.
+    V = ( (UInt16(rx_buf[2] &amp; 3) &lt;&lt; 8) + rx_buf[3] )*3.3/1024
+
+    if V == 0
+        @warn(&quot;The MCP3008 measured 0V.&quot;)
+        return NaN
+    end
+
+    if V &gt; 3.25
+        @warn(&quot;The MCP3008 measured a too high voltage (&gt; 3.25V).&quot;)
+        return NaN
+    end
+
+    # Convert the measurement to temperature
+    # ==========================================================================
+
+    th_R = R_div*(3.3/V - 1)
+    T    = 1/( log(th_R / th_R₀)/th_β + 1/(th_T₀ + 273.15) ) - 273.15
+
+    return T
+end
+
+function run()
+    # Let&#39;s sample at 1kHz to improve the accuracy of MCP3008.
+    init_spi(&quot;/dev/spidev0.0&quot;, max_speed_hz = 1000)
+
+    while true
+        T = acquire_temperature()
+
+        if !isnan(T)
+            @printf(&quot;%-30s %3.2f\n&quot;, string(now()), T)
+        else
+            println(&quot;[ERROR] Problem when acquiring AD measurement.&quot;)
+        end
+        sleep(5)
+    end
+end
+
+run()</code></pre><p><strong>Result:</strong></p><pre><code class="language-none">2020-06-14T19:36:40.564        22.65
+2020-06-14T19:36:46.235        22.65
+2020-06-14T19:36:51.264        22.65
+2020-06-14T19:36:56.286        22.65
+2020-06-14T19:37:01.32         22.65
+2020-06-14T19:37:06.354        22.65
+2020-06-14T19:37:11.381        22.65
+2020-06-14T19:37:16.415        22.65
+2020-06-14T19:37:21.443        22.65
+2020-06-14T19:37:26.465        23.57   -&gt; I placed my finger on the thermistor.
+2020-06-14T19:37:31.497        23.57
+2020-06-14T19:37:36.525        23.16
+2020-06-14T19:37:41.547        22.86
+2020-06-14T19:37:46.581        22.76</code></pre><div class="admonition info"><div class="admonition-title">Info</div><div class="admonition-text"><p>To improve the accuracy, measure the resistance of the voltage divider resistor and update the constant <code>R_div</code>. Furthermore, check the β of your thermistor and update the value in the constant <code>th_β</code>.</p></div></div><footer><hr/><a class="previous" href="../led/"><span class="direction">Previous</span><span class="title">LED</span></a><a class="next" href="../../../lib/library/"><span class="direction">Next</span><span class="title">Library</span></a></footer></article></body></html>

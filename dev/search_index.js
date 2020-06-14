@@ -97,6 +97,14 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
+    "location": "man/gpio/#Example-1",
+    "page": "GPIO",
+    "title": "Example",
+    "category": "section",
+    "text": "See the example LED."
+},
+
+{
     "location": "man/spi/#",
     "page": "SPI",
     "title": "SPI",
@@ -134,6 +142,46 @@ var documenterSearchIndex = {"docs": [
     "title": "Transfer",
     "category": "section",
     "text": "This package support full-duplex transfer using the functions spi_transfer and spi_transfer! as follows.spi_transfer!(devid, tx_buf, rx_buf; kwargs...)Execute a full duplex transfer to SPI device devid. devid is the ID of the SPI device considering the initialization order when the function init_spi was called.tx_buf can be a vector of Integer, in which only one message will be sent, or a vector of vectors of Integer, in which multiple messages will be sent.The received data will be stored in rx_buf that must have the same type of tx_buf and enough size.This function returns the number of bytes received.The following keywords are available:max_speed_hz: If > 0, then override the default maximum transfer speed with                 this value [Hz]. (Default = 0)\ndelay_usecs: If ≥ 0, then override the default delay with this value.                (Default = -1)\nbits_per_word: If > 0, then override the number of bits per word with this                  value. (Default = 0)\ncs_change: If false, the deselect the device at the end of the transfer.julia> tx_buf = [0x01, 0x80, 0x00]\n3-element Array{UInt8,1}:\n 0x01\n 0x80\n 0x00\n\njulia> rx_buf = zeros(UInt8, 3)\n3-element Array{UInt8,1}:\n 0x00\n 0x00\n 0x00\n\njulia> spi_transfer!(1, tx_buf, rx_buf)\n3\n\njulia> rx_buf\n3-element Array{UInt8,1}:\n 0x00\n 0x01\n 0xef\n\njulia> tx_buf = [ [0x01, 0x80, 0x00] for i = 1:3 ]\n3-element Array{Array{UInt8,1},1}:\n [0x01, 0x80, 0x00]\n [0x01, 0x80, 0x00]\n [0x01, 0x80, 0x00]\n\njulia> rx_buf = zeros.(UInt8, length.(tx_buf))\n3-element Array{Array{UInt8,1},1}:\n [0x00, 0x00, 0x00]\n [0x00, 0x00, 0x00]\n [0x00, 0x00, 0x00]\n\njulia> spi_transfer!(1, tx_buf, rx_buf)\n9\n\njulia> rx_buf\n3-element Array{Array{UInt8,1},1}:\n [0x00, 0x01, 0xef]\n [0xef, 0x00, 0x00]\n [0x00, 0x00, 0x00]spi_transfer(devid, tx_buf; kwargs...)Execute a full duplex transfer to SPI device devid. devid is the ID of the SPI device considering the initialization order when the function init_spi was called.tx_buf can be a vector of Integer, in which only one message will be sent, or a vector of vectors of Integer, in which multiple messages will be sent.The result is returned in an object with the same type of tx_buf together with the number of words received.The same keywords of spi_transfer! can be used.julia> tx_buf = [0x01, 0x80, 0x00]\n3-element Array{UInt8,1}:\n 0x01\n 0x80\n 0x00\n\njulia> spi_transfer(1, tx_buf)\n(UInt8[0x00, 0x01, 0xf1], 3)\n\njulia> spi_transfer(1, tx_buf)\n(UInt8[0x00, 0x01, 0xf1], 3)\n\njulia> tx_buf = [ [0x01, 0x80, 0x00] for i = 1:3 ]\n3-element Array{Array{UInt8,1},1}:\n [0x01, 0x80, 0x00]\n [0x01, 0x80, 0x00]\n [0x01, 0x80, 0x00]\n\njulia> spi_transfer(1, tx_buf)\n(Array{UInt8,1}[[0x00, 0x01, 0xf2], [0x9f, 0x00, 0x00], [0x00, 0x00, 0x00]], 9)"
+},
+
+{
+    "location": "man/spi/#Example-1",
+    "page": "SPI",
+    "title": "Example",
+    "category": "section",
+    "text": "See the example Temperature."
+},
+
+{
+    "location": "man/examples/led/#",
+    "page": "LED",
+    "title": "LED",
+    "category": "page",
+    "text": ""
+},
+
+{
+    "location": "man/examples/led/#LED-1",
+    "page": "LED",
+    "title": "LED",
+    "category": "section",
+    "text": "This example shows how to use BaremetalPi.jl to blink a LED. First, connect a LED to the GPIO #4 of the Raspberry Pi as shown in the following figure.warning: Warning\nWe are using the Raspberry Pi Zero W as an example. You must modify it according to your model.<img src=\"../../../assets/Schematic_example_LED.png\" width=\"65%\"/>After that, the following code turn on the LED during 0.5s and then turn it off during another 0.5s indefinitely:using BaremetalPi\n\n# Initialize the GPIOs.\ninit_gpio()\n\n# Make sure that the GPIO #4 is set as output.\ngpio_set_mode(4, :out)\n\n# Blink the LED indefinitely.\nwhile(true)\n    gpio_set(4)\n    sleep(0.5)\n    gpio_clear(4)\n    sleep(0.5)\nend"
+},
+
+{
+    "location": "man/examples/temperature/#",
+    "page": "Temperature",
+    "title": "Temperature",
+    "category": "page",
+    "text": ""
+},
+
+{
+    "location": "man/examples/temperature/#Temperature-1",
+    "page": "Temperature",
+    "title": "Temperature",
+    "category": "section",
+    "text": "This example shows how to use BaremetalPi.jl together with a AD converter MCP3008 and a 103 thermistor to read the ambient temperature. The connections between the components are shown in the following figure:warning: Warning\nWe are using the Raspberry Pi Zero W as an example. You must modify it according to your model.<img src=\"../../../assets/Schematic_example_temperature.png\" width=\"85%\"/>The MCP3008 is a 8-channel 10-bit analog to digital converted that communicates using the SPI interface. Thus, the first thing is to make sure that SPI is enabled in your Linux distribution so that the devices /dev/spidevX.Y exists (X and Y are integers related to the SPI numbering). Please, check the manual of your distribution for more information.After the connection, we need to start the SPI interface in BaremetalPi.jl. Here, we consider that the device in which the MCP3008 was connected is called /dev/spidev0.0.using BaremetalPi\n\ninit_spi(\"/dev/spidev0.0\", max_speed_hz = 1000)Notice that we limit the sampling speed to 1000 Hz to improve the signal-to-noise ratio of the AD conversion as per MCP3008 datasheet.To acquire a new measurement, we need to perform a full-duplex SPI transfer. Three bytes must be sent to the device: 0x01 0x80 0x00, which asks for a new measurement of the channel 0. For more information about how MCP3008 works, please, see the datasheet. This full-duplex transfer can be accomplished using BaremetalPi.jl as follows:tx_buf = [0x01, 0x80, 0x00]\nrx_buf = zeros(UInt8, 3)\n\nret = spi_transfer!(1, tx_buf, rx_buf)ret must be 3 indicating that the device returned 3 bytes. The 10-bit AD measurement is then stored in rx_buf[2:3]. The conversion to voltage is performed as follows:V = ( (UInt16(rx_buf[2] & 3) << 8) + rx_buf[3] )*3.3/1024Now, we need to obtain the resistance of the thermistor using the equation of the voltage divider:R_div = 10_000         # ............. Resistor value at the voltage divider [Ω]\nth_R = R_div*(3.3/V - 1)Finally, using the relationship between resistance and temperature for the selected thermistor, we can get a measurement of the ambient temperature:th_β  = 3380           # ................ Beta coefficient of the thermistor [K]\nth_R₀ = 10_000         # ............. Reference thermistor resistance at T₀ [Ω]\nth_T₀ = 25             # ....... Reference temperature T₀ of the thermistor [°C]\n\nT = 1/( log(th_R / th_R₀)/th_β + 1/(th_T₀ + 273.15) ) - 273.15The following code prints the temperature every 5s:using Dates\nusing Printf\nusing BaremetalPi\n\n################################################################################\n#                                Configuration\n################################################################################\n\nconst R_div = 10_000   # ............. Resistor value at the voltage divider [Ω]\nconst th_β  = 3380     # ................ Beta coefficient of the thermistor [K]\nconst th_R₀ = 10_000   # ............. Reference thermistor resistance at T₀ [Ω]\nconst th_T₀ = 25       # ....... Reference temperature T₀ of the thermistor [°C]\n\n################################################################################\n#                                  Functions\n################################################################################\n\nfunction acquire_temperature()\n    # Acquire the AD measurement\n    # ==========================================================================\n\n    tx_buf = [0x01, 0x80, 0x00]\n    rx_buf = zeros(UInt8, 3)\n    V      = 0\n\n    ret = spi_transfer!(1, tx_buf, rx_buf)\n\n    if ret != 3\n        @warn(\"The data received from MCP3008 does not have 3 bytes.\")\n        return NaN\n    end\n\n    # AD measurement.\n    V = ( (UInt16(rx_buf[2] & 3) << 8) + rx_buf[3] )*3.3/1024\n\n    if V == 0\n        @warn(\"The MCP3008 measured 0V.\")\n        return NaN\n    end\n\n    if V > 3.25\n        @warn(\"The MCP3008 measured a too high voltage (> 3.25V).\")\n        return NaN\n    end\n\n    # Convert the measurement to temperature\n    # ==========================================================================\n\n    th_R = R_div*(3.3/V - 1)\n    T    = 1/( log(th_R / th_R₀)/th_β + 1/(th_T₀ + 273.15) ) - 273.15\n\n    return T\nend\n\nfunction run()\n    # Let\'s sample at 1kHz to improve the accuracy of MCP3008.\n    init_spi(\"/dev/spidev0.0\", max_speed_hz = 1000)\n\n    while true\n        T = acquire_temperature()\n\n        if !isnan(T)\n            @printf(\"%-30s %3.2f\\n\", string(now()), T)\n        else\n            println(\"[ERROR] Problem when acquiring AD measurement.\")\n        end\n        sleep(5)\n    end\nend\n\nrun()Result:2020-06-14T19:36:40.564        22.65\n2020-06-14T19:36:46.235        22.65\n2020-06-14T19:36:51.264        22.65\n2020-06-14T19:36:56.286        22.65\n2020-06-14T19:37:01.32         22.65\n2020-06-14T19:37:06.354        22.65\n2020-06-14T19:37:11.381        22.65\n2020-06-14T19:37:16.415        22.65\n2020-06-14T19:37:21.443        22.65\n2020-06-14T19:37:26.465        23.57   -> I placed my finger on the thermistor.\n2020-06-14T19:37:31.497        23.57\n2020-06-14T19:37:36.525        23.16\n2020-06-14T19:37:41.547        22.86\n2020-06-14T19:37:46.581        22.76info: Info\nTo improve the accuracy, measure the resistance of the voltage divider resistor and update the constant R_div. Furthermore, check the β of your thermistor and update the value in the constant th_β."
 },
 
 {
