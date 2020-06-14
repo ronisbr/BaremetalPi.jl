@@ -182,3 +182,7 @@ julia> tx_buf = [ [0x01, 0x80, 0x00] for i = 1:3 ]
 julia> spi_transfer(1, tx_buf)
 (Array{UInt8,1}[[0x00, 0x01, 0xf2], [0x9f, 0x00, 0x00], [0x00, 0x00, 0x00]], 9)
 ```
+
+## Example
+
+See the example [Temperature](@ref).

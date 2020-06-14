@@ -137,3 +137,7 @@ julia> gpio_set(0xAAAAAAAA) # .... Sets the even GPIOs and clears the odd GPIOs.
 !!! note
 
     The bits higher than 27, which are the number of GPIOs, are just ignored.
+
+## Example
+
+See the example [LED](@ref).

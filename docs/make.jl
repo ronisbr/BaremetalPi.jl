@@ -10,10 +10,14 @@ makedocs(
     sitename = "BaremetalPi",
     authors = "Ronan Arraes Jardim Chagas",
     pages = [
-        "Home"    => "index.md",
-        "GPIO"    => "man/gpio.md",
-        "SPI"     => "man/spi.md",
-        "Library" => "lib/library.md",
+        "Home"            => "index.md",
+        "GPIO"            => "man/gpio.md",
+        "SPI"             => "man/spi.md",
+        "Examples"        => Any[
+            "LED"         => "man/examples/led.md",
+            "Temperature" => "man/examples/temperature.md",
+        ],
+        "Library"  => "lib/library.md",
     ]
 )
 
