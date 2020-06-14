@@ -19,6 +19,7 @@ The following peripherals are currently supported:
 
 * GPIO (without PWM).
 * SPI.
+* I2C (SMBUS).
 
 ## Requirements
 
