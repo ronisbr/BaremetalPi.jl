@@ -289,11 +289,19 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
+    "location": "lib/library/#BaremetalPi.i2c_smbus_read_i2c_block_data!-Tuple{Integer,Integer,Array{UInt8,1}}",
+    "page": "Library",
+    "title": "BaremetalPi.i2c_smbus_read_i2c_block_data!",
+    "category": "method",
+    "text": "i2c_smbus_read_i2c_block_data!(devid::Integer, command::Integer, data::Vector{UInt8})\n\nPerform a SMBUS read block with command command using the I2C device devid. The read data will be written to data. Notice that the first element of the array is always size. Hence, the number of read bytes will be equal to the length of data minus 1.\n\ndevid is the ID of the I2C device considering the initialization order when the function init_i2c was called.\n\n\n\n\n\n"
+},
+
+{
     "location": "lib/library/#BaremetalPi.i2c_smbus_read_i2c_block_data-Tuple{Integer,Integer,Integer}",
     "page": "Library",
     "title": "BaremetalPi.i2c_smbus_read_i2c_block_data",
     "category": "method",
-    "text": "i2c_smbus_read_i2c_block_data(devid::Integer, command::Integer, size::Integer)\n\nPerform a SMBUS read block with command command and length length using the I2C device devid. The read data will be returned in an array of UInt8 with size size.\n\ndevid is the ID of the I2C device considering the initialization order when the function init_i2c was called.\n\n\n\n\n\n"
+    "text": "i2c_smbus_read_i2c_block_data(devid::Integer, command::Integer, size::Integer)\n\nPerform a SMBUS read block with command command and length length using the I2C device devid. The read data will be returned in an array of UInt8 with size size + 1. This array is a view of the buffer that was allocated at the initialization of the I2C device. Notice that the first element of the array is always size.\n\ndevid is the ID of the I2C device considering the initialization order when the function init_i2c was called.\n\nwarning: Warning\nThe returned array is a view of the buffer bblock created for each I2C device. This buffer is modified by other functions like i2c_smbus_write_i2c_block_data. Hence, before performing another I2C transfer that will modify this buffer, be sure to copy the returned value to another place.\n\nnote: Allocations\nDue to the view returned by this functions, it performs one allocation. If this is not wanted, then use the in-place version i2c_smbus_read_i2c_block_data!.\n\n\n\n\n\n"
 },
 
 {
@@ -365,7 +373,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Library",
     "title": "BaremetalPi.spi_transfer!",
     "category": "method",
-    "text": "spi_transfer!(devid, tx_buf, rx_buf; kwargs...)\n\nExecute a full duplex transfer to SPI device devid. devid is the ID of the SPI device considering the initialization order when the function init_spi was called.\n\ntx_buf can be a vector of Integer, in which only one message will be sent, or a vector of vectors of Integer, in which multiple messages will be sent.\n\nThe received data will be stored in rx_buf that must have the same type of tx_buf and enough size.\n\nThis function returns the number of bytes received.\n\nKeywords\n\nmax_speed_hz: If > 0, then override the default maximum transfer speed with                 this value [Hz]. (Default = 0)\ndelay_usecs: If ≥ 0, then override the default delay with this value.                (Default = -1)\nbits_per_word: If > 0, then override the number of bits per word with this                  value. (Default = 0)\ncs_change: If false, the deselect the device at the end of the transfer.\n\n\n\n\n\n"
+    "text": "spi_transfer!(devid, tx_buf, rx_buf; kwargs...)\n\nExecute a full duplex transfer to SPI device devid. devid is the ID of the SPI device considering the initialization order when the function init_spi was called.\n\ntx_buf can be a vector of Integer, in which only one message will be sent, or a vector of vectors of Integer, in which multiple messages will be sent.\n\nThe received data will be stored in rx_buf that must have the same type of tx_buf and enough size.\n\nThis function returns the number of bytes received.\n\nwarning: Warning\nWhen only one message is transmitted, then this function does not allocate. On the other hand, if multiple messages are transmitted, then this function must allocate a vector of struct_spi_ioc_transfer.\n\nKeywords\n\nmax_speed_hz: If > 0, then override the default maximum transfer speed with                 this value [Hz]. (Default = 0)\ndelay_usecs: If ≥ 0, then override the default delay with this value.                (Default = -1)\nbits_per_word: If > 0, then override the number of bits per word with this                  value. (Default = 0)\ncs_change: If false, the deselect the device at the end of the transfer.\n\n\n\n\n\n"
 },
 
 {
