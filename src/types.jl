@@ -14,6 +14,14 @@
 mutable struct I2CDEV
     io::IOStream
     funcs::Vector{Symbol}
+
+    # Buffers used when reading from or writing to the I2C to avoid allocations.
+    bbyte::Vector{UInt8}
+    bword::Vector{UInt16}
+    bblock::Vector{UInt8}
+
+    I2CDEV(io, funcs) = new(io, funcs, UInt8[0x00], UInt16[0x00],
+                            zeros(UInt8, I2C_SMBUS_BLOCK_MAX + 1))
 end
 
 struct struct_i2c_smbus_ioctl_data{T}

@@ -9,9 +9,9 @@
 
 export init_i2c, close_i2c, i2c_get_funcs, i2c_slave, i2c_slave_force,
        i2c_smbus_read_byte, i2c_smbus_read_byte_data, i2c_smbus_read_word_data,
-       i2c_smbus_read_i2c_block_data, i2c_smbus_write_byte,
-       i2c_smbus_write_byte_data, i2c_smbus_write_word_data,
-       i2c_smbus_write_i2c_block_data
+       i2c_smbus_read_i2c_block_data!, i2c_smbus_read_i2c_block_data,
+       i2c_smbus_write_byte, i2c_smbus_write_byte_data,
+       i2c_smbus_write_word_data, i2c_smbus_write_i2c_block_data
 
 ################################################################################
 #                                Initialization
@@ -166,15 +166,14 @@ function i2c_smbus_read_byte(devid::Integer)
     i2cdev = objects.i2cdev[devid]
 
     # Create the SMBUS IOCTL structure to issue the ioctl command.
-    data  = Ref(UInt8(0))
     smbus = struct_i2c_smbus_ioctl_data(I2C_SMBUS_READ,
                                         0,
                                         I2C_SMBUS_BYTE,
-                                        data)
+                                        pointer(i2cdev.bbyte))
 
     _ioctl(fd(i2cdev.io), I2C_SMBUS, Ref(smbus))
 
-    return data.x
+    return (@inbounds i2cdev.bbyte[1])
 end
 
 """
@@ -194,15 +193,14 @@ function i2c_smbus_read_byte_data(devid::Integer, command::Integer)
     i2cdev = objects.i2cdev[devid]
 
     # Create the SMBUS IOCTL structure to issue the ioctl command.
-    data = Ref(UInt8(0))
     smbus = struct_i2c_smbus_ioctl_data(I2C_SMBUS_READ,
                                         command,
                                         I2C_SMBUS_BYTE_DATA,
-                                        data)
+                                        pointer(i2cdev.bbyte))
 
     _ioctl(fd(i2cdev.io), I2C_SMBUS, Ref(smbus))
 
-    return data.x
+    return (@inbounds i2cdev.bbyte[1])
 end
 
 """
@@ -222,15 +220,14 @@ function i2c_smbus_read_word_data(devid::Integer, command::Integer)
     i2cdev = objects.i2cdev[devid]
 
     # Create the SMBUS IOCTL structure to issue the ioctl command.
-    data = Ref(UInt16(0))
     smbus = struct_i2c_smbus_ioctl_data(I2C_SMBUS_READ,
                                         command,
                                         I2C_SMBUS_WORD_DATA,
-                                        data)
+                                        pointer(i2cdev.bword))
 
     _ioctl(fd(i2cdev.io), I2C_SMBUS, Ref(smbus))
 
-    return data.x
+    return (@inbounds i2cdev.bword[1])
 end
 
 """
@@ -238,26 +235,41 @@ end
 
 Perform a SMBUS read block with command `command` and length `length` using the
 I2C device `devid`. The read data will be returned in an array of `UInt8` with
-size `size`.
+size `size + 1`. This array is a view of the buffer that was allocated at the
+initialization of the I2C device. Notice that the first element of the array is
+always `size`.
 
 `devid` is the ID of the I2C device considering the initialization order when
 the function `init_i2c` was called.
 
+!!! warning
+
+    The returned array is a view of the buffer `bblock` created for each I2C
+    device. This buffer is modified by other functions like
+    `i2c_smbus_write_i2c_block_data`. Hence, before performing another I2C
+    transfer that will modify this buffer, be sure to copy the returned value to
+    another place.
+
+!!! note "Allocations"
+
+    Due to the view returned by this functions, it performs one allocation. If
+    this is not wanted, then use the in-place version
+    `i2c_smbus_read_i2c_block_data!`.
+
 """
 function i2c_smbus_read_i2c_block_data(devid::Integer, command::Integer,
                                        size::Integer)
+
     @assert objects.i2c_init "I2C not initialized. Run init_i2c()."
     @assert (0 < devid ≤ length(objects.i2cdev)) "I2C device ID is out of bounds."
+    @assert (size > 0) "The `size` must be larger than 0."
+    @assert (size ≤ I2C_SMBUS_BLOCK_MAX) "I2C block data cannot read more than $(I2C_SMBUS_BLOCK_MAX) bytes."
 
     i2cdev = objects.i2cdev[devid]
-
-    size > I2C_SMBUS_BLOCK_MAX && (size = I2C_SMBUS_BLOCK_MAX)
-
-    # Allocate the array that will receive the data.
-    data = zeros(UInt8, I2C_SMBUS_BLOCK_MAX + 2)
+    data = i2cdev.bblock
 
     # The first parameters is the length of the block we want to read.
-    data[1] = size
+    @inbounds data[1] = size
 
     # Create the SMBUS IOCTL structure to issue the ioctl command.
     smbus = struct_i2c_smbus_ioctl_data(I2C_SMBUS_READ,
@@ -267,7 +279,46 @@ function i2c_smbus_read_i2c_block_data(devid::Integer, command::Integer,
 
     _ioctl(fd(i2cdev.io), I2C_SMBUS, Ref(smbus))
 
-    return data[2:size+1]
+    return view(data, 1:size+1)
+end
+
+"""
+    i2c_smbus_read_i2c_block_data!(devid::Integer, command::Integer, data::Vector{UInt8})
+
+Perform a SMBUS read block with command `command` using the I2C device `devid`.
+The read data will be written to `data`. Notice that the first element of the
+array is always `size`. Hence, the number of read bytes will be equal to the
+length of `data` minus 1.
+
+`devid` is the ID of the I2C device considering the initialization order when
+the function `init_i2c` was called.
+
+"""
+function i2c_smbus_read_i2c_block_data!(devid::Integer, command::Integer,
+                                        data::Vector{UInt8})
+
+    @assert objects.i2c_init "I2C not initialized. Run init_i2c()."
+    @assert (0 < devid ≤ length(objects.i2cdev)) "I2C device ID is out of bounds."
+
+    size = length(data)
+
+    @assert (size ≤ I2C_SMBUS_BLOCK_MAX+1) "I2C block data cannot read more than $(I2C_SMBUS_BLOCK_MAX) bytes."
+    @assert (size > 1) "The `data` array must have at least 2 elements."
+
+    i2cdev = objects.i2cdev[devid]
+
+    # The first parameters is the length of the block we want to read.
+    @inbounds data[1] = size - 1
+
+    # Create the SMBUS IOCTL structure to issue the ioctl command.
+    smbus = struct_i2c_smbus_ioctl_data(I2C_SMBUS_READ,
+                                        command,
+                                        I2C_SMBUS_I2C_BLOCK_DATA,
+                                        pointer(data))
+
+    _ioctl(fd(i2cdev.io), I2C_SMBUS, Ref(smbus))
+
+    return nothing
 end
 
 # Write
@@ -317,11 +368,13 @@ function i2c_smbus_write_byte_data(devid::Integer, command::Integer,
     i2cdev = objects.i2cdev[devid]
 
     # Create the SMBUS IOCTL structure to issue the ioctl command.
-    rvalue = Ref{UInt8}(value)
+    data = i2cdev.bbyte
+    @inbounds data[1] = value
+
     smbus = struct_i2c_smbus_ioctl_data(I2C_SMBUS_WRITE,
                                         command,
                                         I2C_SMBUS_BYTE_DATA,
-                                        rvalue)
+                                        pointer(data))
 
     _ioctl(fd(i2cdev.io), I2C_SMBUS, Ref(smbus))
 
@@ -346,11 +399,13 @@ function i2c_smbus_write_word_data(devid::Integer, command::Integer,
     i2cdev = objects.i2cdev[devid]
 
     # Create the SMBUS IOCTL structure to issue the ioctl command.
-    rvalue = Ref{UInt16}(value)
+    data = i2cdev.bword
+    @inbounds data[1] = value
+
     smbus = struct_i2c_smbus_ioctl_data(I2C_SMBUS_WRITE,
                                         command,
                                         I2C_SMBUS_WORD_DATA,
-                                        rvalue)
+                                        pointer(data))
 
     _ioctl(fd(i2cdev.io), I2C_SMBUS, Ref(smbus))
 
@@ -379,10 +434,15 @@ function i2c_smbus_write_i2c_block_data(devid::Integer, command::Integer,
 
     i2cdev = objects.i2cdev[devid]
 
-    # Create the array and copy the data.
-    data = zeros(UInt8, I2C_SMBUS_BLOCK_MAX+2)
-    data[1] = size
-    data[2:size+1] .= values
+    # Create copy the data to the buffer.
+    data = i2cdev.bblock
+    @inbounds data[1] = size
+
+    # If we use a slice here, then one allocation will be performed because of
+    # the required `view` that will be created.
+    @inbounds for i = 1:size
+        data[i+1] = values[i]
+    end
 
     # Create the SMBUS IOCTL structure to issue the ioctl command.
     smbus = struct_i2c_smbus_ioctl_data(I2C_SMBUS_WRITE,
