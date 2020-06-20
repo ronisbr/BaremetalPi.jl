@@ -183,6 +183,12 @@ The received data will be stored in `rx_buf` that must have the same type of
 
 This function returns the number of bytes received.
 
+!!! warning
+
+    When only one message is transmitted, then this function does not allocate.
+    On the other hand, if multiple messages are transmitted, then this function
+    must allocate a vector of `struct_spi_ioc_transfer`.
+
 # Keywords
 
 * `max_speed_hz`: If > 0, then override the default maximum transfer speed with
@@ -210,7 +216,7 @@ function spi_transfer!(devid::Integer,
     # Number of messages to be transmitted.
     num_msgs = length(tx_buf)
 
-    @assert length(rx_buf) ≥ num_msgs "The number of buffers in `rx_buf` must be equal or bigger than the number of buffers in `tx_buf`."
+    @assert (length(rx_buf) ≥ num_msgs) "The number of buffers in `rx_buf` must be equal or bigger than the number of buffers in `tx_buf`."
 
     # Check default parameters.
     max_speed_hz  ≤ 0 && (max_speed_hz  = spidev.max_speed_hz)
@@ -223,8 +229,8 @@ function spi_transfer!(devid::Integer,
     @inbounds for i = 1:num_msgs
         msg_size = length(tx_buf[i])
 
-        @assert msg_size*bits_per_word ≤ objects.spi_buffer_size*8 "The message to be transmitted is larger than the SPI buffer."
-        @assert length(rx_buf[i]) ≥ msg_size "The length of `rx_buf[i]` must be equal or bigger than that of `tx_buf[i]`."
+        @assert (msg_size*bits_per_word ≤ objects.spi_buffer_size*8) "The message to be transmitted is larger than the SPI buffer."
+        @assert (length(rx_buf[i]) ≥ msg_size) "The length of `rx_buf[i]` must be equal or bigger than that of `tx_buf[i]`."
 
         # Create the structure that contains the information of the SPI transfer.
         descs[i] = struct_spi_ioc_transfer(pointer(tx_buf[i]),
@@ -247,6 +253,37 @@ end
 function spi_transfer!(devid::Integer,
                        tx_buf::AbstractVector{T},
                        rx_buf::AbstractVector{T};
-                       kwargs...) where T<:Integer
-    return spi_transfer!(devid, [tx_buf], [rx_buf]; kwargs...)
+                       max_speed_hz::Integer = 0,
+                       delay_usecs::Integer = -1,
+                       bits_per_word::Integer = 8,
+                       cs_change::Bool = false) where T<:Integer
+
+    @assert objects.spi_init "SPI not initialized. Run init_spi()."
+    @assert (0 < devid ≤ length(objects.spidev)) "SPI device ID is out of bounds."
+
+    spidev = objects.spidev[devid]
+
+    # Check default parameters.
+    max_speed_hz  ≤ 0 && (max_speed_hz  = spidev.max_speed_hz)
+    delay_usecs   < 0 && (delay_usecs   = 0)
+    bits_per_word ≤ 0 && (bits_per_word = spidev.bits_per_word)
+
+    msg_size = length(tx_buf)
+
+    @assert (msg_size*bits_per_word ≤ objects.spi_buffer_size*8) "The message to be transmitted is larger than the SPI buffer."
+    @assert (length(rx_buf) ≥ msg_size) "The length of `rx_buf` must be equal or bigger than that of `tx_buf`."
+
+    # Create the structure that contains the information of the SPI transfer.
+    desc = struct_spi_ioc_transfer(pointer(tx_buf),
+                                   pointer(rx_buf),
+                                   # In SPI, the number of transmitted and
+                                   # received words are always the same.
+                                   msg_size*sizeof(T),
+                                   max_speed_hz,
+                                   delay_usecs,
+                                   bits_per_word,
+                                   cs_change)
+
+    # Execute the transfer.
+    return _ioctl(fd(spidev.io), SPI_IOC_MESSAGE(1), Ref(desc))
 end
