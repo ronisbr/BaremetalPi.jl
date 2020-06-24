@@ -38,12 +38,6 @@ end
 #                                     SPI
 ################################################################################
 
-mutable struct SPIDEV
-    io::IOStream
-    max_speed_hz::Int
-    bits_per_word::Int
-end
-
 struct struct_spi_ioc_transfer
     tx_buf::__u64
     rx_buf::__u64
@@ -65,6 +59,18 @@ struct_spi_ioc_transfer(tx_buf, rx_buf, len, speed_hz, delay_usecs,
                             __u32(speed_hz), __u16(delay_usecs),
                             __u8(bits_per_word), __u8(cs_change), __u8(0),
                             __u8(0), __u16(0))
+mutable struct SPIDEV
+    io::IOStream
+    max_speed_hz::Int
+    bits_per_word::Int
+
+    # Buffers to reduce the allocation.
+    bdescs::Vector{struct_spi_ioc_transfer}
+end
+
+SPIDEV(io, max_speed_hz, bits_per_word) =
+    SPIDEV(io, max_speed_hz, bits_per_word,
+           Vector{struct_spi_ioc_transfer}(undef, _SPI_BUFFER_SIZE))
 
 ################################################################################
 #                                    Global

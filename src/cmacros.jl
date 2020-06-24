@@ -38,9 +38,8 @@ _IOC(dir,type,nr,size) = (dir  << _IOC_DIRSHIFT)  |
                          (nr   << _IOC_NRSHIFT)   |
                          (size << _IOC_SIZESHIFT)
 
-_IOC_TYPECHECK(t)  = sizeof(t)
-_IOW(type,nr,size) = _IOC(_IOC_WRITE, type, nr, _IOC_TYPECHECK(size))
-_IOR(type,nr,size) = _IOC(_IOC_READ,  type, nr, _IOC_TYPECHECK(size))
+_IOW(type,nr,size) = _IOC(_IOC_WRITE, type, nr, size)
+_IOR(type,nr,size) = _IOC(_IOC_READ,  type, nr, size)
 
 ################################################################################
 #                                     I2C
@@ -145,16 +144,21 @@ SPI_MSGSIZE(N) =
     ( N*sizeof(struct_spi_ioc_transfer) < (1 << _IOC_SIZEBITS) ) ?
         N*sizeof(struct_spi_ioc_transfer) : 0
 
-SPI_IOC_MESSAGE(N) = _IOW(SPI_IOC_MAGIC, 0, NTuple{SPI_MSGSIZE(N), Cchar})
+# In the past, we were using `NTuple{SPI_MSGSIZE(N), Cchar}` to create a type so
+# that the function `_IOC_TYPECHECK(t) = sizeof(t)` could retrieve the correct
+# size. However, this was causing 3 allocations. Thus, the system was simplified
+# to avoid this. Now, the functions `_IOR` and `_IOW` must receive the size
+# instead of the type as it was coded in the Kernel source.
+SPI_IOC_MESSAGE(N) = _IOW(SPI_IOC_MAGIC, 0, sizeof(Cchar)*SPI_MSGSIZE(N))
 
-const SPI_IOC_RD_MODE = _IOR(SPI_IOC_MAGIC, 1, __u8)
-const SPI_IOC_WR_MODE = _IOW(SPI_IOC_MAGIC, 1, __u8)
+const SPI_IOC_RD_MODE = _IOR(SPI_IOC_MAGIC, 1, sizeof(__u8))
+const SPI_IOC_WR_MODE = _IOW(SPI_IOC_MAGIC, 1, sizeof(__u8))
 
-const SPI_IOC_RD_LSB_FIRST = _IOR(SPI_IOC_MAGIC, 2, __u8)
-const SPI_IOC_WR_LSB_FIRST = _IOW(SPI_IOC_MAGIC, 2, __u8)
+const SPI_IOC_RD_LSB_FIRST = _IOR(SPI_IOC_MAGIC, 2, sizeof(__u8))
+const SPI_IOC_WR_LSB_FIRST = _IOW(SPI_IOC_MAGIC, 2, sizeof(__u8))
 
-const SPI_IOC_RD_BITS_PER_WORD = _IOR(SPI_IOC_MAGIC, 3, __u8)
-const SPI_IOC_WR_BITS_PER_WORD = _IOW(SPI_IOC_MAGIC, 3, __u8)
+const SPI_IOC_RD_BITS_PER_WORD = _IOR(SPI_IOC_MAGIC, 3, sizeof(__u8))
+const SPI_IOC_WR_BITS_PER_WORD = _IOW(SPI_IOC_MAGIC, 3, sizeof(__u8))
 
-const SPI_IOC_RD_MAX_SPEED_HZ = _IOR(SPI_IOC_MAGIC, 4, __u32)
-const SPI_IOC_WR_MAX_SPEED_HZ = _IOW(SPI_IOC_MAGIC, 4, __u32)
+const SPI_IOC_RD_MAX_SPEED_HZ = _IOR(SPI_IOC_MAGIC, 4, sizeof(__u32))
+const SPI_IOC_WR_MAX_SPEED_HZ = _IOW(SPI_IOC_MAGIC, 4, sizeof(__u32))

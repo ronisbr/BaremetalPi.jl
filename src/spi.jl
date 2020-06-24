@@ -139,6 +139,12 @@ or a vector of vectors of `Integer`, in which multiple messages will be sent.
 The result is returned in an object with the same type of `tx_buf` together with
 the number of words received.
 
+!!! note "Allocations"
+
+    This function will perform allocations because they create the vector that
+    will be returned. If this is not desired, then use the in-place version
+    `spi_transfer!`.
+
 # Keywords
 
 The same keywords of `spi_transfer!` can be used.
@@ -183,11 +189,12 @@ The received data will be stored in `rx_buf` that must have the same type of
 
 This function returns the number of bytes received.
 
-!!! warning
+!!! note "Allocations"
 
-    When only one message is transmitted, then this function does not allocate.
-    On the other hand, if multiple messages are transmitted, then this function
-    must allocate a vector of `struct_spi_ioc_transfer`.
+    This function will not allocate only if the number of messages sent is lower
+    than the constant `BaremetalPi._SPI_BUFFER_SIZE`. Otherwise, it will perform
+    an allocation because it must allocate a vector of
+    `struct_spi_ioc_transfer`.
 
 # Keywords
 
@@ -223,8 +230,12 @@ function spi_transfer!(devid::Integer,
     delay_usecs   < 0 && (delay_usecs   = 0)
     bits_per_word ≤ 0 && (bits_per_word = spidev.bits_per_word)
 
-    # Allocate the vector with the description of the transfer.
-    descs = Vector{struct_spi_ioc_transfer}(undef, num_msgs)
+    # Check if we can use the allocated buffer to transfer the message.
+    if num_msgs > _SPI_BUFFER_SIZE
+        descs = Vector{struct_spi_ioc_transfer}(undef, num_msgs)
+    else
+        descs = spidev.bdescs
+    end
 
     @inbounds for i = 1:num_msgs
         msg_size = length(tx_buf[i])
@@ -243,7 +254,6 @@ function spi_transfer!(devid::Integer,
                                            delay_usecs,
                                            bits_per_word,
                                            cs_change)
-
     end
 
     # Execute the transfer.
