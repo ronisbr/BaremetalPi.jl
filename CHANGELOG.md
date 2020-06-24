@@ -1,6 +1,17 @@
 BaremetalPi.jl Changelog
 ========================
 
+Version 0.1.1
+-------------
+
+- ![Enhancement][badge-enhancement] The transfers using SPI do not allocate
+  anymore if the in-place version `spi_transfer!` is used, and if the number of
+  messages is lower than `BaremetalPi._SPI_BUFFER_SIZE`. This constant is
+  currently set to 16.
+- ![Enhancement][badge-enhancement] The transfers using I2C (read and write) do
+  not allocate anymore if the in-place version of the functions are used
+  (`i2c_smbus_*!`).
+
 Version 0.1.0
 -------------
 
