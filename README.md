@@ -1,6 +1,7 @@
 BaremetalPi.jl
 ==============
 
+[![Build status](https://github.com/ronisbr/BaremetalPi.jl/workflows/CI/badge.svg)](https://github.com/ronisbr/BaremetalPi.jl/actions)
 [![](https://img.shields.io/badge/docs-stable-blue.svg)][docs-stable-url]
 [![](https://img.shields.io/badge/docs-dev-blue.svg)][docs-dev-url]
 
