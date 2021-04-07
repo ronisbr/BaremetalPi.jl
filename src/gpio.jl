@@ -42,7 +42,7 @@ end
 ################################################################################
 
 """
-    gpio_get_mode(gpio::Int, dir::Symbol)
+    gpio_get_mode(gpio::Int)
 
 Return the state of the GPIO `gpio`.
 
@@ -68,7 +68,7 @@ function gpio_get_mode(gpio::Int)
 end
 
 """
-    gpio_set_mode(gpio, dir::Symbol)
+    gpio_set_mode(gpio, mode::Symbol)
 
 Set the mode of the GPIO `gpio` to `mode`. `gpio` can be an integer of an
 `AbstractVector` with the list of GPIOs that will be set.
@@ -145,7 +145,7 @@ end
 ################################################################################
 
 """
-    gpio_clear(gpio)
+    gpio_clear(gpio::Int)
 
 Clear GPIO `gpio`.
 
@@ -170,7 +170,7 @@ end
 end
 
 """
-    gpio_set(gpio)
+    gpio_set(gpio::Int)
 
 Set GPIO `gpio`.
 

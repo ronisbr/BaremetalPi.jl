@@ -88,6 +88,13 @@ julia> gpio_set(1:10)
 
 ```
 
+The next function changes a GPIO to the logic level 0.
+
+```julia
+gpio_clear(gpio::Int)
+gpio_clear(gpio::AbstractVector{Int})
+```
+
 !!! note
 
     No check is performed to verify which is the current mode of the GPIO. The
@@ -129,9 +136,9 @@ gpio_value(v::BitVector)
 ```julia
 julia> gpio_value(0)        # ................................ Clears all GPIOs.
 
-julia> gpio_set(0xFFFFFFFF) # .................................. Sets all GPIOs.
+julia> gpio_value(0xFFFFFFFF) # .................................. Sets all GPIOs.
 
-julia> gpio_set(0xAAAAAAAA) # .... Sets the even GPIOs and clears the odd GPIOs.
+julia> gpio_value(0xAAAAAAAA) # .... Sets the even GPIOs and clears the odd GPIOs.
 ```
 
 !!! note
