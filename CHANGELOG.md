@@ -1,6 +1,11 @@
 BaremetalPi.jl Changelog
 ========================
 
+Version 0.1.2
+-------------
+
+- ![Bug][badge-bugfix] BaremetalPi.jl is now compatible with Julia 1.7.
+
 Version 0.1.1
 -------------
 
