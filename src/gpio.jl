@@ -7,8 +7,8 @@
 #
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 
-export init_gpio, gpio_get_mode, gpio_set_mode, gpio_read, gpio_clear, gpio_set,
-       gpio_value
+export init_gpio, gpio_get_mode, gpio_set_mode, gpio_read, gpio_clear, gpio_set
+export gpio_value
 
 ################################################################################
 #                                Initialization
@@ -18,14 +18,18 @@ export init_gpio, gpio_get_mode, gpio_set_mode, gpio_read, gpio_clear, gpio_set,
     init_gpio()
 
 Initialize the GPIO.
-
 """
 function init_gpio()
     # Open and map /dev/gpiomem.
     try
         gpiomem_io  = open("/dev/gpiomem", "w+")
-        gpiomem_map = Mmap.mmap(gpiomem_io, Vector{UInt32}, (GPIOMEM_SIZE,), 0,
-                                grow = false)
+        gpiomem_map = Mmap.mmap(
+            gpiomem_io,
+            Vector{UInt32},
+            (GPIOMEM_SIZE,),
+            0,
+            grow = false
+        )
 
         objects.gpiomem_io  = gpiomem_io
         objects.gpiomem_map = gpiomem_map
@@ -45,7 +49,6 @@ end
     gpio_get_mode(gpio::Int)
 
 Return the state of the GPIO `gpio`.
-
 """
 function gpio_get_mode(gpio::Int)
     @assert objects.gpio_init "GPIO not initialized. Run init_gpio()."
@@ -55,7 +58,7 @@ function gpio_get_mode(gpio::Int)
 
     @inbounds begin
         ind   = div(gpio, 10) + 1
-        g     = 3*(gpio % 10)
+        g     = 3 * (gpio % 10)
         mask  = 7 << g
         state = (map[ind] & mask) >> g
 
@@ -83,7 +86,6 @@ Set the mode of the GPIO `gpio` to `mode`. `gpio` can be an integer of an
 * `:alt3`: GPIO will be set to alternate function 3.
 * `:alt4`: GPIO will be set to alternate function 4.
 * `:alt5`: GPIO will be set to alternate function 5.
-
 """
 function gpio_set_mode(gpio::Int, mode::Symbol)
     @assert objects.gpio_init "GPIO not initialized. Run init_gpio()."
@@ -94,7 +96,7 @@ function gpio_set_mode(gpio::Int, mode::Symbol)
 
     @inbounds begin
         ind  = div(gpio, 10) + 1
-        g    = 3*(gpio % 10)
+        g    = 3 * (gpio % 10)
 
         # We must always clear the GPIO mode before setting the new mode. This
         # is done by temporarily setting the GPIO to `:in`.
@@ -125,14 +127,13 @@ end
     gpio_read(gpio::Int)
 
 Read the GPIO `gpio`. The returned value is boolean.
-
 """
 function gpio_read(gpio::Int)
     @assert objects.gpio_init "GPIO not initialized. Run init_gpio()."
     @assert (0 ≤ gpio ≤ 27) "GPIO out of range."
 
     @inbounds begin
-        if (objects.gpiomem_map[13+1] & (1 << gpio)) > 0
+        if (objects.gpiomem_map[13 + 1] & (1 << gpio)) > 0
             return true
         else
             return false
@@ -148,14 +149,13 @@ end
     gpio_clear(gpio::Int)
 
 Clear GPIO `gpio`.
-
 """
 @inline function gpio_clear(gpio::Int)
     @assert objects.gpio_init "GPIO not initialized. Run init_gpio()."
     @assert (0 ≤ gpio ≤ 27) "GPIO out of range."
 
     @inbounds begin
-        objects.gpiomem_map[10+1] = 1 << gpio
+        objects.gpiomem_map[10 + 1] = 1 << gpio
     end
 
     return nothing
@@ -173,14 +173,13 @@ end
     gpio_set(gpio::Int)
 
 Set GPIO `gpio`.
-
 """
 @inline function gpio_set(gpio::Int)
     @assert objects.gpio_init "GPIO not initialized. Run init_gpio()."
     @assert (0 ≤ gpio ≤ 27) "GPIO out of range."
 
     @inbounds begin
-        objects.gpiomem_map[7+1] = 1 << gpio
+        objects.gpiomem_map[7 + 1] = 1 << gpio
     end
 
     return nothing
@@ -203,7 +202,6 @@ bits that are `1` will be set.
     gpio_value(v::BitVector)
 
 Convert the bit array `v` to `Int` and call `gpio_value(::Int)`.
-
 """
 function gpio_value(v::Integer)
     @assert objects.gpio_init "GPIO not initialized. Run init_gpio()."
@@ -211,10 +209,10 @@ function gpio_value(v::Integer)
 
     @inbounds begin
         # Set the GPIO.
-        objects.gpiomem_map[7+1]  = v & 0xFFFFFFF
+        objects.gpiomem_map[7 + 1]  = v & 0xFFFFFFF
 
         # Clear the GPIOs.
-        objects.gpiomem_map[10+1] = (~UInt32(v)) & 0xFFFFFFF
+        objects.gpiomem_map[10 + 1] = (~UInt32(v)) & 0xFFFFFFF
     end
 
     return nothing
