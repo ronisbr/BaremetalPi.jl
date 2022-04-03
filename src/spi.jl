@@ -23,21 +23,22 @@ or a vector of strings with a set of SPI devices that will be initialized.
 
 * `mode`: Set the mode of the SPI. (**Default** = 0)
 * `max_speed_hz`: Maximum allowed speed in SPI communication [Hz].
-                  (**Default** = 4_000_000)
+    (**Default** = 4_000_000)
 * `bits_per_word`: Number of bits per word in SPI communication.
-                   (**Default** = 8)
+    (**Default** = 8)
 
 Notice that all keywords can be a `Integer`, when the configuration will be
 applied to all SPI devices, or a `Vector` of `Integers`, when different
 configurations can be applied to the initialized devices.
-
 """
 @inline init_spi(devices::String; kwargs...) = init_spi([devices]; kwargs...)
 
-function init_spi(devices::AbstractVector{String};
-                  mode::Union{Integer,Vector{Integer}} = 0,
-                  max_speed_hz::Union{Integer,Vector{Integer}} = 4_000_000,
-                  bits_per_word::Union{Integer,Vector{Integer}} = 8)
+function init_spi(
+    devices::AbstractVector{String};
+    mode::Union{Integer, Vector{Integer}} = 0,
+    max_speed_hz::Union{Integer, Vector{Integer}} = 4_000_000,
+    bits_per_word::Union{Integer, Vector{Integer}} = 8
+)
 
     # Number of devices that the user wants to initialize.
     num_init_devices = length(devices)
@@ -108,7 +109,6 @@ end
     close_spi()
 
 Close all SPI connections.
-
 """
 function close_spi()
     if objects.spi_init
@@ -148,7 +148,6 @@ the number of words received.
 # Keywords
 
 The same keywords of `spi_transfer!` can be used.
-
 """
 function spi_transfer(devid::Integer, tx_buf::AbstractVector{T}; kwargs...) where
     T<:Integer
@@ -199,21 +198,22 @@ This function returns the number of bytes received.
 # Keywords
 
 * `max_speed_hz`: If > 0, then override the default maximum transfer speed with
-                  this value [Hz]. (**Default** = 0)
+    this value [Hz]. (**Default** = 0)
 * `delay_usecs`: If ≥ 0, then override the default delay with this value.
-                 (**Default** = -1)
+    (**Default** = -1)
 * `bits_per_word`: If > 0, then override the number of bits per word with this
-                   value. (**Default** = 0)
+    value. (**Default** = 0)
 * `cs_change`: If `false`, the deselect the device at the end of the transfer.
-
 """
-function spi_transfer!(devid::Integer,
-                       tx_buf::AbstractVector{T},
-                       rx_buf::AbstractVector{T};
-                       max_speed_hz::Integer = 0,
-                       delay_usecs::Integer = -1,
-                       bits_per_word::Integer = 8,
-                       cs_change::Bool = false) where T<:Vector{U} where U <:Integer
+function spi_transfer!(
+    devid::Integer,
+    tx_buf::AbstractVector{T},
+    rx_buf::AbstractVector{T};
+    max_speed_hz::Integer = 0,
+    delay_usecs::Integer = -1,
+    bits_per_word::Integer = 8,
+    cs_change::Bool = false
+) where T<:(Vector{U} where U <:Integer)
 
     @assert objects.spi_init "SPI not initialized. Run init_spi()."
     @assert (0 < devid ≤ length(objects.spidev)) "SPI device ID is out of bounds."
@@ -226,9 +226,17 @@ function spi_transfer!(devid::Integer,
     @assert (length(rx_buf) ≥ num_msgs) "The number of buffers in `rx_buf` must be equal or bigger than the number of buffers in `tx_buf`."
 
     # Check default parameters.
-    max_speed_hz  ≤ 0 && (max_speed_hz  = spidev.max_speed_hz)
-    delay_usecs   < 0 && (delay_usecs   = 0)
-    bits_per_word ≤ 0 && (bits_per_word = spidev.bits_per_word)
+    if max_speed_hz ≤ 0
+        max_speed_hz  = spidev.max_speed_hz
+    end
+
+    if delay_usecs < 0
+        delay_usecs = 0
+    end
+
+    if bits_per_word ≤ 0
+        bits_per_word = spidev.bits_per_word
+    end
 
     # Check if we can use the allocated buffer to transfer the message.
     if num_msgs > _SPI_BUFFER_SIZE
@@ -240,33 +248,36 @@ function spi_transfer!(devid::Integer,
     @inbounds for i = 1:num_msgs
         msg_size = length(tx_buf[i])
 
-        @assert (msg_size*bits_per_word ≤ objects.spi_buffer_size*8) "The message to be transmitted is larger than the SPI buffer."
+        @assert (msg_size * bits_per_word ≤ objects.spi_buffer_size * 8) "The message to be transmitted is larger than the SPI buffer."
         @assert (length(rx_buf[i]) ≥ msg_size) "The length of `rx_buf[i]` must be equal or bigger than that of `tx_buf[i]`."
 
         # Create the structure that contains the information of the SPI transfer.
-        descs[i] = struct_spi_ioc_transfer(pointer(tx_buf[i]),
-                                           pointer(rx_buf[i]),
-                                           # In SPI, the number of transmitted
-                                           # and received words are always the
-                                           # same.
-                                           msg_size*sizeof(U),
-                                           max_speed_hz,
-                                           delay_usecs,
-                                           bits_per_word,
-                                           cs_change)
+        descs[i] = struct_spi_ioc_transfer(
+            pointer(tx_buf[i]),
+            pointer(rx_buf[i]),
+            # In SPI, the number of transmitted and received words are always
+            # the same.
+            msg_size * sizeof(U),
+            max_speed_hz,
+            delay_usecs,
+            bits_per_word,
+            cs_change
+        )
     end
 
     # Execute the transfer.
     return _ioctl(fd(spidev.io), SPI_IOC_MESSAGE(num_msgs), descs)
 end
 
-function spi_transfer!(devid::Integer,
-                       tx_buf::AbstractVector{T},
-                       rx_buf::AbstractVector{T};
-                       max_speed_hz::Integer = 0,
-                       delay_usecs::Integer = -1,
-                       bits_per_word::Integer = 8,
-                       cs_change::Bool = false) where T<:Integer
+function spi_transfer!(
+    devid::Integer,
+    tx_buf::AbstractVector{T},
+    rx_buf::AbstractVector{T};
+    max_speed_hz::Integer = 0,
+    delay_usecs::Integer = -1,
+    bits_per_word::Integer = 8,
+    cs_change::Bool = false
+) where T<:Integer
 
     @assert objects.spi_init "SPI not initialized. Run init_spi()."
     @assert (0 < devid ≤ length(objects.spidev)) "SPI device ID is out of bounds."
@@ -274,25 +285,35 @@ function spi_transfer!(devid::Integer,
     spidev = objects.spidev[devid]
 
     # Check default parameters.
-    max_speed_hz  ≤ 0 && (max_speed_hz  = spidev.max_speed_hz)
-    delay_usecs   < 0 && (delay_usecs   = 0)
-    bits_per_word ≤ 0 && (bits_per_word = spidev.bits_per_word)
+    if max_speed_hz ≤ 0
+        max_speed_hz  = spidev.max_speed_hz
+    end
+
+    if delay_usecs < 0
+        delay_usecs = 0
+    end
+
+    if bits_per_word ≤ 0
+        bits_per_word = spidev.bits_per_word
+    end
 
     msg_size = length(tx_buf)
 
-    @assert (msg_size*bits_per_word ≤ objects.spi_buffer_size*8) "The message to be transmitted is larger than the SPI buffer."
+    @assert (msg_size * bits_per_word ≤ objects.spi_buffer_size * 8) "The message to be transmitted is larger than the SPI buffer."
     @assert (length(rx_buf) ≥ msg_size) "The length of `rx_buf` must be equal or bigger than that of `tx_buf`."
 
     # Create the structure that contains the information of the SPI transfer.
-    desc = struct_spi_ioc_transfer(pointer(tx_buf),
-                                   pointer(rx_buf),
-                                   # In SPI, the number of transmitted and
-                                   # received words are always the same.
-                                   msg_size*sizeof(T),
-                                   max_speed_hz,
-                                   delay_usecs,
-                                   bits_per_word,
-                                   cs_change)
+    desc = struct_spi_ioc_transfer(
+        pointer(tx_buf),
+        pointer(rx_buf),
+        # In SPI, the number of transmitted and received words are always the
+        # same.
+        msg_size * sizeof(T),
+        max_speed_hz,
+        delay_usecs,
+        bits_per_word,
+        cs_change
+    )
 
     # Execute the transfer.
     return _ioctl(fd(spidev.io), SPI_IOC_MESSAGE(1), Ref(desc))

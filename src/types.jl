@@ -20,8 +20,15 @@ mutable struct I2CDEV
     bword::Vector{UInt16}
     bblock::Vector{UInt8}
 
-    I2CDEV(io, funcs) = new(io, funcs, UInt8[0x00], UInt16[0x00],
-                            zeros(UInt8, I2C_SMBUS_BLOCK_MAX + 1))
+    function I2CDEV(io, funcs)
+        return new(
+            io,
+            funcs,
+            UInt8[0x00],
+            UInt16[0x00],
+            zeros(UInt8, I2C_SMBUS_BLOCK_MAX + 1)
+        )
+    end
 end
 
 struct struct_i2c_smbus_ioctl_data{T}
@@ -30,8 +37,9 @@ struct struct_i2c_smbus_ioctl_data{T}
     size::__u32
     data::T
 
-    struct_i2c_smbus_ioctl_data(read_write, command, size, data::T) where T=
-        new{T}(__u8(read_write), __u8(command), __u32(size), data)
+    function struct_i2c_smbus_ioctl_data(read_write, command, size, data::T) where T
+        return new{T}(__u8(read_write), __u8(command), __u32(size), data)
+    end
 end
 
 ################################################################################
@@ -53,12 +61,29 @@ struct struct_spi_ioc_transfer
     pad::__u16
 end
 
-struct_spi_ioc_transfer(tx_buf, rx_buf, len, speed_hz, delay_usecs,
-                        bits_per_word, cs_change) =
-    struct_spi_ioc_transfer(__u64(tx_buf), __u64(rx_buf), __u32(len),
-                            __u32(speed_hz), __u16(delay_usecs),
-                            __u8(bits_per_word), __u8(cs_change), __u8(0),
-                            __u8(0), __u16(0))
+function struct_spi_ioc_transfer(
+    tx_buf,
+    rx_buf,
+    len,
+    speed_hz,
+    delay_usecs,
+    bits_per_word,
+    cs_change
+)
+    return struct_spi_ioc_transfer(
+        __u64(tx_buf),
+        __u64(rx_buf),
+        __u32(len),
+        __u32(speed_hz),
+        __u16(delay_usecs),
+        __u8(bits_per_word),
+        __u8(cs_change),
+        __u8(0),
+        __u8(0),
+        __u16(0)
+    )
+end
+
 mutable struct SPIDEV
     io::IOStream
     max_speed_hz::Int
@@ -68,9 +93,14 @@ mutable struct SPIDEV
     bdescs::Vector{struct_spi_ioc_transfer}
 end
 
-SPIDEV(io, max_speed_hz, bits_per_word) =
-    SPIDEV(io, max_speed_hz, bits_per_word,
-           Vector{struct_spi_ioc_transfer}(undef, _SPI_BUFFER_SIZE))
+function SPIDEV(io, max_speed_hz, bits_per_word)
+    return SPIDEV(
+        io,
+        max_speed_hz,
+        bits_per_word,
+        Vector{struct_spi_ioc_transfer}(undef, _SPI_BUFFER_SIZE)
+    )
+end
 
 ################################################################################
 #                                    Global
@@ -81,7 +111,6 @@ SPIDEV(io, max_speed_hz, bits_per_word) =
 
 This structure stores global objects, such as the IO file and the memory
 mappings.
-
 """
 mutable struct Objects
     # GPIO
@@ -102,6 +131,13 @@ mutable struct Objects
     spi_buffer_size::Int
 end
 
-const objects = Objects(false, IOStream(""), Vector{UInt32}(undef,0),
-                        false, Vector{I2CDEV}(undef, 0),
-                        false, Vector{SPIDEV}(undef, 0), 4096)
+const objects = Objects(
+    false,
+    IOStream(""),
+    Vector{UInt32}(undef, 0),
+    false,
+    Vector{I2CDEV}(undef, 0),
+    false,
+    Vector{SPIDEV}(undef, 0),
+    4096
+)
