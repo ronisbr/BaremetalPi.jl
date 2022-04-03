@@ -33,13 +33,15 @@ const _IOC_DIRSHIFT  = (_IOC_SIZESHIFT+_IOC_SIZEBITS)
 const _IOC_WRITE = UInt32(1)
 const _IOC_READ  = UInt32(2)
 
-_IOC(dir,type,nr,size) = (dir  << _IOC_DIRSHIFT)  |
-                         (type << _IOC_TYPESHIFT) |
-                         (nr   << _IOC_NRSHIFT)   |
-                         (size << _IOC_SIZESHIFT)
+function _IOC(dir, type, nr, size)
+    return (dir  << _IOC_DIRSHIFT)  |
+           (type << _IOC_TYPESHIFT) |
+           (nr   << _IOC_NRSHIFT)   |
+           (size << _IOC_SIZESHIFT)
+end
 
-_IOW(type,nr,size) = _IOC(_IOC_WRITE, type, nr, size)
-_IOR(type,nr,size) = _IOC(_IOC_READ,  type, nr, size)
+_IOW(type, nr, size) = _IOC(_IOC_WRITE, type, nr, size)
+_IOR(type, nr, size) = _IOC(_IOC_READ,  type, nr, size)
 
 ################################################################################
 #                                     I2C
@@ -82,31 +84,38 @@ const I2C_FUNC_SMBUS_READ_I2C_BLOCK   = 0x04000000
 const I2C_FUNC_SMBUS_WRITE_I2C_BLOCK  = 0x08000000
 const I2C_FUNC_SMBUS_HOST_NOTIFY      = 0x10000000
 
-const  I2C_FUNC_SMBUS_BYTE       = (I2C_FUNC_SMBUS_READ_BYTE |
-                                    I2C_FUNC_SMBUS_WRITE_BYTE)
-const  I2C_FUNC_SMBUS_BYTE_DATA  = (I2C_FUNC_SMBUS_READ_BYTE_DATA |
-                                    I2C_FUNC_SMBUS_WRITE_BYTE_DATA)
-const  I2C_FUNC_SMBUS_WORD_DATA  = (I2C_FUNC_SMBUS_READ_WORD_DATA |
-                                    I2C_FUNC_SMBUS_WRITE_WORD_DATA)
-const  I2C_FUNC_SMBUS_BLOCK_DATA = (I2C_FUNC_SMBUS_READ_BLOCK_DATA |
-                                    I2C_FUNC_SMBUS_WRITE_BLOCK_DATA)
-const  I2C_FUNC_SMBUS_I2C_BLOCK  = (I2C_FUNC_SMBUS_READ_I2C_BLOCK |
-                                    I2C_FUNC_SMBUS_WRITE_I2C_BLOCK)
+const I2C_FUNC_SMBUS_BYTE = (I2C_FUNC_SMBUS_READ_BYTE | I2C_FUNC_SMBUS_WRITE_BYTE)
 
-const I2C_FUNC_SMBUS_EMUL = (I2C_FUNC_SMBUS_QUICK |
-                             I2C_FUNC_SMBUS_BYTE |
-                             I2C_FUNC_SMBUS_BYTE_DATA |
-                             I2C_FUNC_SMBUS_WORD_DATA |
-                             I2C_FUNC_SMBUS_PROC_CALL |
-                             I2C_FUNC_SMBUS_WRITE_BLOCK_DATA |
-                             I2C_FUNC_SMBUS_I2C_BLOCK |
-                             I2C_FUNC_SMBUS_PEC)
+const I2C_FUNC_SMBUS_BYTE_DATA = (
+    I2C_FUNC_SMBUS_READ_BYTE_DATA | I2C_FUNC_SMBUS_WRITE_BYTE_DATA
+)
+
+const I2C_FUNC_SMBUS_WORD_DATA = (
+    I2C_FUNC_SMBUS_READ_WORD_DATA | I2C_FUNC_SMBUS_WRITE_WORD_DATA
+)
+
+const I2C_FUNC_SMBUS_BLOCK_DATA = (
+    I2C_FUNC_SMBUS_READ_BLOCK_DATA | I2C_FUNC_SMBUS_WRITE_BLOCK_DATA
+)
+
+const I2C_FUNC_SMBUS_I2C_BLOCK = (
+    I2C_FUNC_SMBUS_READ_I2C_BLOCK | I2C_FUNC_SMBUS_WRITE_I2C_BLOCK
+)
+
+const I2C_FUNC_SMBUS_EMUL = (
+    I2C_FUNC_SMBUS_QUICK |
+    I2C_FUNC_SMBUS_BYTE |
+    I2C_FUNC_SMBUS_BYTE_DATA |
+    I2C_FUNC_SMBUS_WORD_DATA |
+    I2C_FUNC_SMBUS_PROC_CALL |
+    I2C_FUNC_SMBUS_WRITE_BLOCK_DATA |
+    I2C_FUNC_SMBUS_I2C_BLOCK |
+    I2C_FUNC_SMBUS_PEC
+)
 
 const I2C_SMBUS_BLOCK_MAX        = UInt8(32)
-
 const I2C_SMBUS_READ             = 0x01
 const I2C_SMBUS_WRITE            = 0x00
-
 const I2C_SMBUS_QUICK            = UInt32(0)
 const I2C_SMBUS_BYTE             = UInt32(1)
 const I2C_SMBUS_BYTE_DATA        = UInt32(2)
@@ -126,10 +135,10 @@ const I2C_SMBUS_I2C_BLOCK_DATA   = UInt32(8)
 const SPI_CPHA      = 0x01
 const SPI_CPOL      = 0x02
 
-const SPI_MODE_0    = (0|0)
-const SPI_MODE_1    = (0|SPI_CPHA)
-const SPI_MODE_2    = (SPI_CPOL|0)
-const SPI_MODE_3    = (SPI_CPOL|SPI_CPHA)
+const SPI_MODE_0    = (0 | 0)
+const SPI_MODE_1    = (0 | SPI_CPHA)
+const SPI_MODE_2    = (SPI_CPOL | 0)
+const SPI_MODE_3    = (SPI_CPOL | SPI_CPHA)
 
 const SPI_CS_HIGH   = 0x04
 const SPI_LSB_FIRST = 0x08
@@ -140,16 +149,20 @@ const SPI_READY     = 0x80
 
 const SPI_IOC_MAGIC = UInt('k')
 
-SPI_MSGSIZE(N) =
-    ( N*sizeof(struct_spi_ioc_transfer) < (1 << _IOC_SIZEBITS) ) ?
-        N*sizeof(struct_spi_ioc_transfer) : 0
+function SPI_MSGSIZE(N)
+    if (N * sizeof(struct_spi_ioc_transfer)) < (1 << _IOC_SIZEBITS)
+        return N * sizeof(struct_spi_ioc_transfer)
+    else
+        return 0
+    end
+end
 
 # In the past, we were using `NTuple{SPI_MSGSIZE(N), Cchar}` to create a type so
 # that the function `_IOC_TYPECHECK(t) = sizeof(t)` could retrieve the correct
 # size. However, this was causing 3 allocations. Thus, the system was simplified
 # to avoid this. Now, the functions `_IOR` and `_IOW` must receive the size
 # instead of the type as it was coded in the Kernel source.
-SPI_IOC_MESSAGE(N) = _IOW(SPI_IOC_MAGIC, 0, sizeof(Cchar)*SPI_MSGSIZE(N))
+SPI_IOC_MESSAGE(N) = _IOW(SPI_IOC_MAGIC, 0, sizeof(Cchar) * SPI_MSGSIZE(N))
 
 const SPI_IOC_RD_MODE = _IOR(SPI_IOC_MAGIC, 1, sizeof(__u8))
 const SPI_IOC_WR_MODE = _IOW(SPI_IOC_MAGIC, 1, sizeof(__u8))
