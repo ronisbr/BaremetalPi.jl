@@ -109,7 +109,7 @@ function acquire_temperature()
     end
 
     # AD measurement.
-    V = ( (UInt16(rx_buf[2] & 3) << 8) + rx_buf[3] )*3.3/1024
+    V = ((UInt16(rx_buf[2] & 3) << 8) + rx_buf[3]) * 3.3 / 1024
 
     if V == 0
         @warn("The MCP3008 measured 0V.")
@@ -124,8 +124,8 @@ function acquire_temperature()
     # Convert the measurement to temperature
     # ==========================================================================
 
-    th_R = R_div*(3.3/V - 1)
-    T    = 1/( log(th_R / th_R₀)/th_β + 1/(th_T₀ + 273.15) ) - 273.15
+    th_R = R_div * (3.3 / V - 1)
+    T    = 1 / (log(th_R / th_R₀) / th_β + 1 / (th_T₀ + 273.15)) - 273.15
 
     return T
 end
