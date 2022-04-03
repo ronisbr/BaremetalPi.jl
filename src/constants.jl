@@ -22,23 +22,27 @@ const __u64 = UInt64
 
 const GPIOMEM_SIZE = 1024
 
-const GPIO_MODE_GET = Dict(0b000 => :in,
-                           0b001 => :out,
-                           0b100 => :alt0,
-                           0b101 => :alt1,
-                           0b110 => :alt2,
-                           0b111 => :alt3,
-                           0b011 => :alt4,
-                           0b010 => :alt5)
+const GPIO_MODE_GET = Dict(
+    0b000 => :in,
+    0b001 => :out,
+    0b100 => :alt0,
+    0b101 => :alt1,
+    0b110 => :alt2,
+    0b111 => :alt3,
+    0b011 => :alt4,
+    0b010 => :alt5
+)
 
-const GPIO_MODE_SET = Dict(:in   => 0b000,
-                           :out  => 0b001,
-                           :alt0 => 0b100,
-                           :alt1 => 0b101,
-                           :alt2 => 0b110,
-                           :alt3 => 0b111,
-                           :alt4 => 0b011,
-                           :alt5 => 0b010)
+const GPIO_MODE_SET = Dict(
+    :in   => 0b000,
+    :out  => 0b001,
+    :alt0 => 0b100,
+    :alt1 => 0b101,
+    :alt2 => 0b110,
+    :alt3 => 0b111,
+    :alt4 => 0b011,
+    :alt5 => 0b010
+)
 
 ################################################################################
 #                                     SPI
