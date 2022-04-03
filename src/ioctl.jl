@@ -27,15 +27,15 @@ for (Tj, Tc) in (
         return ret
     end
 
-    @eval function _ioctl(fd::Integer, request::Integer, arg::Base.RefValue{$Tj})
-        ret = ccall(:ioctl, Cint, (Cint, Culong, Ref{$Tc}), fd, request, arg)
-        ret < 0 && throw(SystemError("Error in IOCTL call", Libc.errno()))
-        return ret
-    end
-
     @eval function _ioctl(fd::Integer, request::Integer, arg::AbstractVector{$Tj})
         ret = ccall(:ioctl, Cint, (Cint, Culong, Ref{$Tc}), fd, request, arg)
         ret < 0 && throw(SystemError("Error in IOCTL call", Libc.errno()))
         return ret
     end
+end
+
+function _ioctl(fd::Integer, request::Integer, arg::Base.RefValue{T}) where T
+    ret = ccall(:ioctl, Cint, (Cint, Culong, Ref{T}), fd, request, arg)
+    ret < 0 && throw(SystemError("Error in IOCTL call", Libc.errno()))
+    return ret
 end
