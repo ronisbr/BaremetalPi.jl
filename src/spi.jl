@@ -64,9 +64,9 @@ function init_spi(
     spidev = Vector{SPIDEV}(undef, 0)
 
     @inbounds for i = 1:num_init_devices
-        @assert (mode[i] ≥ 0) error("Invalid SPI mode.")
-        @assert (max_speed_hz[i] > 0) error("Invalid maximum speed [Hz].")
-        @assert (bits_per_word[i] > 0) error("Invalid number of bits per word.")
+        (mode[i] < 0) && error("Invalid SPI mode.")
+        (max_speed_hz[i] ≤ 0) && error("Invalid maximum speed [Hz].")
+        (bits_per_word[i] ≤ 0) && error("Invalid number of bits per word.")
 
         try
             # Open the device
@@ -149,9 +149,11 @@ the number of words received.
 
 The same keywords of `spi_transfer!` can be used.
 """
-function spi_transfer(devid::Integer, tx_buf::AbstractVector{T}; kwargs...) where
-    T<:Integer
-
+function spi_transfer(
+    devid::Integer,
+    tx_buf::AbstractVector{T};
+    kwargs...
+) where T<:Integer
     # Allocate the vector that will hold the returned words.
     rx_buf = zeros(T, length(tx_buf))
 
@@ -161,8 +163,11 @@ function spi_transfer(devid::Integer, tx_buf::AbstractVector{T}; kwargs...) wher
     return rx_buf, ret
 end
 
-function spi_transfer(devid::Integer, tx_buf::AbstractVector{T}; kwargs...) where
-    T<:Vector{U} where U<:Integer
+function spi_transfer(
+    devid::Integer,
+    tx_buf::AbstractVector{T};
+    kwargs...
+) where T<:(Vector{U} where U<:Integer)
 
     # Allocate the vectors that will hold the returned words.
     rx_buf = zeros.(U, length.(tx_buf))
@@ -215,15 +220,17 @@ function spi_transfer!(
     cs_change::Bool = false
 ) where T<:(Vector{U} where U <:Integer)
 
-    @assert objects.spi_init "SPI not initialized. Run init_spi()."
-    @assert (0 < devid ≤ length(objects.spidev)) "SPI device ID is out of bounds."
+    !objects.spi_init && error("SPI not initialized. Run init_spi().")
+    !(0 < devid ≤ length(objects.spidev)) && error("SPI device ID is out of bounds.")
 
     spidev = objects.spidev[devid]
 
     # Number of messages to be transmitted.
     num_msgs = length(tx_buf)
 
-    @assert (length(rx_buf) ≥ num_msgs) "The number of buffers in `rx_buf` must be equal or bigger than the number of buffers in `tx_buf`."
+    if length(rx_buf) ≥ num_msgs
+        error("The number of buffers in `rx_buf` must be equal or bigger than the number of buffers in `tx_buf`.")
+    end
 
     # Check default parameters.
     if max_speed_hz ≤ 0
@@ -248,8 +255,13 @@ function spi_transfer!(
     @inbounds for i = 1:num_msgs
         msg_size = length(tx_buf[i])
 
-        @assert (msg_size * bits_per_word ≤ objects.spi_buffer_size * 8) "The message to be transmitted is larger than the SPI buffer."
-        @assert (length(rx_buf[i]) ≥ msg_size) "The length of `rx_buf[i]` must be equal or bigger than that of `tx_buf[i]`."
+        if msg_size * bits_per_word > objects.spi_buffer_size * 8
+            error("The message to be transmitted is larger than the SPI buffer.")
+        end
+
+        if length(rx_buf[i]) < msg_size
+            error("The length of `rx_buf[i]` must be equal or bigger than that of `tx_buf[i]`.")
+        end
 
         # Create the structure that contains the information of the SPI transfer.
         descs[i] = struct_spi_ioc_transfer(
@@ -279,8 +291,8 @@ function spi_transfer!(
     cs_change::Bool = false
 ) where T<:Integer
 
-    @assert objects.spi_init "SPI not initialized. Run init_spi()."
-    @assert (0 < devid ≤ length(objects.spidev)) "SPI device ID is out of bounds."
+    !objects.spi_init && error("SPI not initialized. Run init_spi().")
+    !(0 < devid ≤ length(objects.spidev)) && error("SPI device ID is out of bounds.")
 
     spidev = objects.spidev[devid]
 
@@ -299,8 +311,13 @@ function spi_transfer!(
 
     msg_size = length(tx_buf)
 
-    @assert (msg_size * bits_per_word ≤ objects.spi_buffer_size * 8) "The message to be transmitted is larger than the SPI buffer."
-    @assert (length(rx_buf) ≥ msg_size) "The length of `rx_buf` must be equal or bigger than that of `tx_buf`."
+    if msg_size * bits_per_word > objects.spi_buffer_size * 8
+        error("The message to be transmitted is larger than the SPI buffer.")
+    end
+
+    if length(rx_buf) < msg_size
+        error("The length of `rx_buf` must be equal or bigger than that of `tx_buf`.")
+    end
 
     # Create the structure that contains the information of the SPI transfer.
     desc = struct_spi_ioc_transfer(

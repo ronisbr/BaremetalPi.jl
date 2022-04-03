@@ -92,8 +92,8 @@ Return a vector with the available I2C functions in the device `devid`.
 the function `init_i2c` was called.
 """
 @inline function i2c_get_funcs(devid::Int)
-    @assert objects.i2c_init "I2C not initialized. Run init_i2c()."
-    @assert (0 < devid ≤ length(objects.i2cdev)) "I2C device ID is out of bounds."
+    !objects.i2c_init && error("I2C not initialized. Run init_i2c().")
+    !(0 < devid ≤ length(objects.i2cdev)) && error("I2C device ID is out of bounds.")
 
     return objects.i2cdev[devid].funcs
 end
@@ -111,8 +111,8 @@ Select the slave device in address `address` using I2C device `devid`.
 the function `init_i2c` was called.
 """
 function i2c_slave(devid::Integer, address::Integer)
-    @assert objects.i2c_init "I2C not initialized. Run init_i2c()."
-    @assert (0 < devid ≤ length(objects.i2cdev)) "I2C device ID is out of bounds."
+    !objects.i2c_init && error("I2C not initialized. Run init_i2c().")
+    !(0 < devid ≤ length(objects.i2cdev)) && error("I2C device ID is out of bounds.")
 
     i2cdev = objects.i2cdev[devid]
 
@@ -130,8 +130,8 @@ Force selection of slave device in address `address` using I2C device `devid`.
 the function `init_i2c` was called.
 """
 function i2c_slave_force(devid::Integer, address::Integer)
-    @assert objects.i2c_init "I2C not initialized. Run init_i2c()."
-    @assert (0 < devid ≤ length(objects.i2cdev)) "I2C device ID is out of bounds."
+    !objects.i2c_init && error("I2C not initialized. Run init_i2c().")
+    !(0 < devid ≤ length(objects.i2cdev)) && error("I2C device ID is out of bounds.")
 
     i2cdev = objects.i2cdev[devid]
 
@@ -153,8 +153,8 @@ the read byte.
 the function `init_i2c` was called.
 """
 function i2c_smbus_read_byte(devid::Integer)
-    @assert objects.i2c_init "I2C not initialized. Run init_i2c()."
-    @assert (0 < devid ≤ length(objects.i2cdev)) "I2C device ID is out of bounds."
+    !objects.i2c_init && error("I2C not initialized. Run init_i2c().")
+    !(0 < devid ≤ length(objects.i2cdev)) && error("I2C device ID is out of bounds.")
 
     i2cdev = objects.i2cdev[devid]
 
@@ -181,8 +181,8 @@ This function return the read byte.
 the function `init_i2c` was called.
 """
 function i2c_smbus_read_byte_data(devid::Integer, command::Integer)
-    @assert objects.i2c_init "I2C not initialized. Run init_i2c()."
-    @assert (0 < devid ≤ length(objects.i2cdev)) "I2C device ID is out of bounds."
+    !objects.i2c_init && error("I2C not initialized. Run init_i2c().")
+    !(0 < devid ≤ length(objects.i2cdev)) && error("I2C device ID is out of bounds.")
 
     i2cdev = objects.i2cdev[devid]
 
@@ -209,8 +209,8 @@ This function return the read word.
 the function `init_i2c` was called.
 """
 function i2c_smbus_read_word_data(devid::Integer, command::Integer)
-    @assert objects.i2c_init "I2C not initialized. Run init_i2c()."
-    @assert (0 < devid ≤ length(objects.i2cdev)) "I2C device ID is out of bounds."
+    !objects.i2c_init && error("I2C not initialized. Run init_i2c().")
+    (0 < devid ≤ length(objects.i2cdev)) && error("I2C device ID is out of bounds.")
 
     i2cdev = objects.i2cdev[devid]
 
@@ -258,10 +258,16 @@ function i2c_smbus_read_i2c_block_data(
     command::Integer,
     size::Integer
 )
-    @assert objects.i2c_init "I2C not initialized. Run init_i2c()."
-    @assert (0 < devid ≤ length(objects.i2cdev)) "I2C device ID is out of bounds."
-    @assert (size > 0) "The `size` must be larger than 0."
-    @assert (size ≤ I2C_SMBUS_BLOCK_MAX) "I2C block data cannot read more than $(I2C_SMBUS_BLOCK_MAX) bytes."
+    !objects.i2c_init && error("I2C not initialized. Run init_i2c().")
+    !(0 < devid ≤ length(objects.i2cdev)) && error("I2C device ID is out of bounds.")
+
+    if size < 0
+        error("The `size` must be larger than 0.")
+    end
+
+    if size > I2C_SMBUS_BLOCK_MAX
+        error("I2C block data cannot read more than $(I2C_SMBUS_BLOCK_MAX) bytes.")
+    end
 
     i2cdev = objects.i2cdev[devid]
     data = i2cdev.bblock
@@ -298,13 +304,18 @@ function i2c_smbus_read_i2c_block_data!(
     command::Integer,
     data::Vector{UInt8}
 )
-    @assert objects.i2c_init "I2C not initialized. Run init_i2c()."
-    @assert (0 < devid ≤ length(objects.i2cdev)) "I2C device ID is out of bounds."
+    !objects.i2c_init && error("I2C not initialized. Run init_i2c().")
+    !(0 < devid ≤ length(objects.i2cdev)) && error("I2C device ID is out of bounds.")
 
     size = length(data)
 
-    @assert (size ≤ I2C_SMBUS_BLOCK_MAX + 1) "I2C block data cannot read more than $(I2C_SMBUS_BLOCK_MAX) bytes."
-    @assert (size > 1) "The `data` array must have at least 2 elements."
+    if size > I2C_SMBUS_BLOCK_MAX + 1
+        error("I2C block data cannot read more than $(I2C_SMBUS_BLOCK_MAX) bytes.")
+    end
+
+    if size ≤ 1
+        error("The `data` array must have at least 2 elements.")
+    end
 
     i2cdev = objects.i2cdev[devid]
 
@@ -336,8 +347,8 @@ Perform a SMBUS write byte with value `value` using the I2C device `devid`.
 the function `init_i2c` was called.
 """
 function i2c_smbus_write_byte(devid::Integer, value::Integer)
-    @assert objects.i2c_init "I2C not initialized. Run init_i2c()."
-    @assert (0 < devid ≤ length(objects.i2cdev)) "I2C device ID is out of bounds."
+    !objects.i2c_init && error("I2C not initialized. Run init_i2c().")
+    !(0 < devid ≤ length(objects.i2cdev)) && error("I2C device ID is out of bounds.")
 
     i2cdev = objects.i2cdev[devid]
 
@@ -368,8 +379,8 @@ function i2c_smbus_write_byte_data(
     command::Integer,
     value::Integer
 )
-    @assert objects.i2c_init "I2C not initialized. Run init_i2c()."
-    @assert (0 < devid ≤ length(objects.i2cdev)) "I2C device ID is out of bounds."
+    !objects.i2c_init && error("I2C not initialized. Run init_i2c().")
+    !(0 < devid ≤ length(objects.i2cdev)) && error("I2C device ID is out of bounds.")
 
     i2cdev = objects.i2cdev[devid]
 
@@ -403,8 +414,8 @@ function i2c_smbus_write_word_data(
     command::Integer,
     value::Integer
 )
-    @assert objects.i2c_init "I2C not initialized. Run init_i2c()."
-    @assert (0 < devid ≤ length(objects.i2cdev)) "I2C device ID is out of bounds."
+    !objects.i2c_init && error("I2C not initialized. Run init_i2c().")
+    !(0 < devid ≤ length(objects.i2cdev)) && error("I2C device ID is out of bounds.")
 
     i2cdev = objects.i2cdev[devid]
 
@@ -438,12 +449,14 @@ function i2c_smbus_write_i2c_block_data(
     command::Integer,
     values::Vector{UInt8}
 )
-    @assert objects.i2c_init "I2C not initialized. Run init_i2c()."
-    @assert (0 < devid ≤ length(objects.i2cdev)) "I2C device ID is out of bounds."
+    !objects.i2c_init && error("I2C not initialized. Run init_i2c().")
+    !(0 < devid ≤ length(objects.i2cdev)) && error("I2C device ID is out of bounds.")
 
     size = length(values)
 
-    @assert (size ≤ I2C_SMBUS_BLOCK_MAX) "I2C block data cannot write more than $(I2C_SMBUS_BLOCK_MAX) bytes."
+    if size > I2C_SMBUS_BLOCK_MAX
+        error("I2C block data cannot write more than $(I2C_SMBUS_BLOCK_MAX) bytes.")
+    end
 
     i2cdev = objects.i2cdev[devid]
 

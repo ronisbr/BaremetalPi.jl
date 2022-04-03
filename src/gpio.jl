@@ -51,8 +51,8 @@ end
 Return the state of the GPIO `gpio`.
 """
 function gpio_get_mode(gpio::Int)
-    @assert objects.gpio_init "GPIO not initialized. Run init_gpio()."
-    @assert (0 ≤ gpio ≤ 27) "GPIO out of range."
+    !objects.gpio_init && error("GPIO not initialized. Run init_gpio().")
+    !(0 ≤ gpio ≤ 27) && error("GPIO out of range.")
 
     map = objects.gpiomem_map
 
@@ -88,9 +88,12 @@ Set the mode of the GPIO `gpio` to `mode`. `gpio` can be an integer of an
 * `:alt5`: GPIO will be set to alternate function 5.
 """
 function gpio_set_mode(gpio::Int, mode::Symbol)
-    @assert objects.gpio_init "GPIO not initialized. Run init_gpio()."
-    @assert (0 ≤ gpio ≤ 27) "GPIO out of range."
-    @assert haskey(GPIO_MODE_SET, mode) "Unknown GPIO mode."
+    !objects.gpio_init && error("GPIO not initialized. Run init_gpio().")
+    !(0 ≤ gpio ≤ 27) && error("GPIO out of range.")
+
+    if !haskey(GPIO_MODE_SET, mode)
+        error("Unknown GPIO mode.")
+    end
 
     map = objects.gpiomem_map
 
@@ -129,8 +132,8 @@ end
 Read the GPIO `gpio`. The returned value is boolean.
 """
 function gpio_read(gpio::Int)
-    @assert objects.gpio_init "GPIO not initialized. Run init_gpio()."
-    @assert (0 ≤ gpio ≤ 27) "GPIO out of range."
+    !objects.gpio_init && error("GPIO not initialized. Run init_gpio().")
+    !(0 ≤ gpio ≤ 27) && error("GPIO out of range.")
 
     @inbounds begin
         if (objects.gpiomem_map[13 + 1] & (1 << gpio)) > 0
@@ -151,8 +154,8 @@ end
 Clear GPIO `gpio`.
 """
 @inline function gpio_clear(gpio::Int)
-    @assert objects.gpio_init "GPIO not initialized. Run init_gpio()."
-    @assert (0 ≤ gpio ≤ 27) "GPIO out of range."
+    !objects.gpio_init && error("GPIO not initialized. Run init_gpio().")
+    !(0 ≤ gpio ≤ 27) && error("GPIO out of range.")
 
     @inbounds begin
         objects.gpiomem_map[10 + 1] = 1 << gpio
@@ -175,8 +178,8 @@ end
 Set GPIO `gpio`.
 """
 @inline function gpio_set(gpio::Int)
-    @assert objects.gpio_init "GPIO not initialized. Run init_gpio()."
-    @assert (0 ≤ gpio ≤ 27) "GPIO out of range."
+    !objects.gpio_init && error("GPIO not initialized. Run init_gpio().")
+    !(0 ≤ gpio ≤ 27) && error("GPIO out of range.")
 
     @inbounds begin
         objects.gpiomem_map[7 + 1] = 1 << gpio
@@ -204,8 +207,8 @@ bits that are `1` will be set.
 Convert the bit array `v` to `Int` and call `gpio_value(::Int)`.
 """
 function gpio_value(v::Integer)
-    @assert objects.gpio_init "GPIO not initialized. Run init_gpio()."
-    @assert (v ≥ 0) "`v` cannot be negative."
+    !objects.gpio_init && error("GPIO not initialized. Run init_gpio().")
+    (v < 0) && error("`v` cannot be negative.")
 
     @inbounds begin
         # Set the GPIO.
