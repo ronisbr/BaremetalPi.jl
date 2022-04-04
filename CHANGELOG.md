@@ -1,6 +1,16 @@
 BaremetalPi.jl Changelog
 ========================
 
+Version 0.2.0
+-------------
+
+- ![BREAKING][badge-breaking] The `@assert`s were removed and changed to
+  conditionals. This modification can change the behavior of the code in some
+  corner cases. However, the code is more robust.
+- ![Bug][badge-bugfix] IOCTL calls were not working with structures (pointers),
+  leading to problems when using SPI.
+
+
 Version 0.1.2
 -------------
 
